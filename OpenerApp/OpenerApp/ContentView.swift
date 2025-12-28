@@ -290,14 +290,8 @@ struct FileTypeRow: View {
 
                 // Only show description for registered UTIs with valid descriptions
                 if hasValidDescription {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(fileType.utiDescription!)
-                            .font(.body)
-
-                        Text(fileType.uti)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(fileType.utiDescription!)
+                        .font(.body)
                 }
 
                 Spacer()
@@ -395,6 +389,59 @@ struct FileTypeRow: View {
             }
         }
         .animation(.snappy(duration: 0.25), value: isSelectionMode)
+        .contextMenu {
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(".\(fileType.fileExtension)", forType: .string)
+            } label: {
+                Label("Copy Extension", systemImage: "doc.on.doc")
+            }
+
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(fileType.uti, forType: .string)
+            } label: {
+                Label("Copy UTI", systemImage: "tag")
+            }
+
+            if let handler = fileType.defaultHandler {
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(handler.bundleIdentifier, forType: .string)
+                } label: {
+                    Label("Copy Handler Bundle ID", systemImage: "app")
+                }
+            }
+
+            Divider()
+
+            Menu("Change Default") {
+                ForEach(fileType.availableHandlers, id: \.bundleIdentifier) { app in
+                    Button {
+                        viewModel.setDefaultHandler(
+                            forExtension: fileType.fileExtension,
+                            bundleID: app.bundleIdentifier
+                        )
+                    } label: {
+                        HStack {
+                            if let icon = app.icon {
+                                Image(nsImage: icon)
+                            }
+                            Text(app.name)
+                            if app.bundleIdentifier == fileType.defaultHandler?.bundleIdentifier {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+
+                Divider()
+
+                Button("Other…") {
+                    showingAllApps = true
+                }
+            }
+        }
         .sheet(isPresented: $showingAllApps) {
             AppPickerSheet(
                 mode: .single(
@@ -1162,6 +1209,52 @@ struct URLSchemeRow: View {
             }
         }
         .animation(.snappy(duration: 0.25), value: isExpanded)
+        .contextMenu {
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString("\(scheme.scheme)://", forType: .string)
+            } label: {
+                Label("Copy Scheme", systemImage: "doc.on.doc")
+            }
+
+            if let handler = scheme.defaultHandler {
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(handler.bundleIdentifier, forType: .string)
+                } label: {
+                    Label("Copy Handler Bundle ID", systemImage: "app")
+                }
+            }
+
+            Divider()
+
+            Menu("Change Default") {
+                ForEach(scheme.availableHandlers, id: \.bundleIdentifier) { app in
+                    Button {
+                        viewModel.setDefaultHandler(
+                            forScheme: scheme.scheme,
+                            bundleID: app.bundleIdentifier
+                        )
+                    } label: {
+                        HStack {
+                            if let icon = app.icon {
+                                Image(nsImage: icon)
+                            }
+                            Text(app.name)
+                            if app.bundleIdentifier == scheme.defaultHandler?.bundleIdentifier {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+
+                Divider()
+
+                Button("Other…") {
+                    showingAllApps = true
+                }
+            }
+        }
         .sheet(isPresented: $showingAllApps) {
             URLSchemePickerSheet(
                 scheme: scheme.scheme,

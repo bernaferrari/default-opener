@@ -30,7 +30,7 @@ struct CheckForUpdatesView: View {
 @main
 struct OpenerApp: App {
     @StateObject private var viewModel = AppViewModel()
-    @State private var showingAbout = false
+    @Environment(\.openWindow) private var openWindow
 
     // Sparkle updater controller
     private let updaterController: SPUStandardUpdaterController
@@ -44,9 +44,6 @@ struct OpenerApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(viewModel)
-                .sheet(isPresented: $showingAbout) {
-                    AboutView()
-                }
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 900, height: 650)
@@ -56,7 +53,7 @@ struct OpenerApp: App {
             // Replace default About with custom
             CommandGroup(replacing: .appInfo) {
                 Button("About Opener") {
-                    showingAbout = true
+                    openWindow(id: "about")
                 }
             }
 
@@ -72,6 +69,14 @@ struct OpenerApp: App {
                 .keyboardShortcut("r", modifiers: .command)
             }
         }
+
+        // About Window
+        Window("About Opener", id: "about") {
+            AboutView()
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
 
         Settings {
             SettingsView()
@@ -93,59 +98,93 @@ struct AboutView: View {
         Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     }
 
+    private var currentYear: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy"
+        return formatter.string(from: Date())
+    }
+
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: 24)
+
             // App Icon
             if let appIcon = NSApp.applicationIconImage {
                 Image(nsImage: appIcon)
                     .resizable()
+                    .interpolation(.high)
                     .frame(width: 128, height: 128)
+                    .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
             }
+
+            Spacer()
+                .frame(height: 16)
 
             // App Name
             Text("Opener")
-                .font(.system(size: 28, weight: .bold))
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+
+            Spacer()
+                .frame(height: 4)
 
             // Version
             Text("Version \(appVersion) (\(buildNumber))")
-                .font(.subheadline)
+                .font(.system(size: 11))
                 .foregroundStyle(.secondary)
+
+            Spacer()
+                .frame(height: 20)
 
             // Description
-            Text("Take back control of your default apps on macOS")
-                .font(.body)
+            Text("Take back control of your\ndefault apps on macOS")
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .lineSpacing(2)
 
-            Divider()
-                .frame(width: 200)
+            Spacer()
+                .frame(height: 24)
 
             // Links
-            VStack(spacing: 8) {
+            HStack(spacing: 16) {
                 Link(destination: URL(string: "https://github.com/bernaferrari/Opener")!) {
-                    Label("View on GitHub", systemImage: "link")
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left.forwardslash.chevron.right")
+                        Text("Source")
+                    }
+                    .font(.system(size: 11, weight: .medium))
                 }
+                .buttonStyle(.plain)
 
                 Link(destination: URL(string: "https://github.com/bernaferrari/Opener/issues")!) {
-                    Label("Report an Issue", systemImage: "exclamationmark.bubble")
+                    HStack(spacing: 4) {
+                        Image(systemName: "ladybug")
+                        Text("Report Bug")
+                    }
+                    .font(.system(size: 11, weight: .medium))
                 }
+                .buttonStyle(.plain)
             }
-            .font(.subheadline)
+            .foregroundStyle(.blue)
 
             Spacer()
 
             // Copyright
-            Text("Made with care for the macOS community")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-
-            Button("Close") {
-                dismiss()
+            VStack(spacing: 2) {
+                Text("Copyright © \(currentYear) Bernardo Ferrari")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+                Text("All rights reserved.")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
             }
-            .keyboardShortcut(.escape, modifiers: [])
+
+            Spacer()
+                .frame(height: 16)
         }
-        .padding(30)
-        .frame(width: 340, height: 420)
+        .frame(width: 300, height: 360)
+        .background(.regularMaterial)
     }
 }
 
