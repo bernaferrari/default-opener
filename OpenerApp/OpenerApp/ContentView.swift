@@ -404,15 +404,6 @@ struct FileTypeRow: View {
                 Label("Copy UTI", systemImage: "tag")
             }
 
-            if let handler = fileType.defaultHandler {
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(handler.bundleIdentifier, forType: .string)
-                } label: {
-                    Label("Copy Handler Bundle ID", systemImage: "app")
-                }
-            }
-
             Divider()
 
             Menu("Change Default") {
@@ -1215,15 +1206,6 @@ struct URLSchemeRow: View {
                 NSPasteboard.general.setString("\(scheme.scheme)://", forType: .string)
             } label: {
                 Label("Copy Scheme", systemImage: "doc.on.doc")
-            }
-
-            if let handler = scheme.defaultHandler {
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(handler.bundleIdentifier, forType: .string)
-                } label: {
-                    Label("Copy Handler Bundle ID", systemImage: "app")
-                }
             }
 
             Divider()
