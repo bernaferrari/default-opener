@@ -5,12 +5,12 @@ struct ContentView: View {
     @EnvironmentObject var viewModel: AppViewModel
     @State private var selectedSidebarItem: SidebarItem? = .allFileTypes
     @State private var refreshRotation: Double = 0
+    @State private var showingExternalChanges = false
 
     enum SidebarItem: Hashable {
         case allFileTypes
         case allURLSchemes
         case backups
-        case activity
         case category(FileCategory)
         case app(String) // bundleID
     }
@@ -24,7 +24,9 @@ struct ContentView: View {
         .searchable(text: $viewModel.searchText, prompt: "Search file types, apps...")
         .navigationTitle("Opener")
         .overlay(alignment: .bottom) {
-            ToastView(message: viewModel.toastMessage)
+            ToastView(message: viewModel.toastMessage, undoAction: viewModel.undoAction) {
+                viewModel.performUndo()
+            }
         }
         .overlay(alignment: .top) {
             UpdateBanner(updateInfo: viewModel.updateInfo)
@@ -51,6 +53,15 @@ struct ContentView: View {
                 try? await Task.sleep(nanoseconds: 600_000_000)
             }
         }
+        .onAppear {
+            // Show external changes alert if any detected
+            if !viewModel.externalChanges.isEmpty {
+                showingExternalChanges = true
+            }
+        }
+        .sheet(isPresented: $showingExternalChanges) {
+            ExternalChangesAlert()
+        }
     }
 }
 
@@ -71,32 +82,6 @@ struct SidebarView: View {
 
                 Label("Backups", systemImage: "clock.arrow.circlepath")
                     .tag(ContentView.SidebarItem.backups)
-
-                Label {
-                    HStack {
-                        Text("Activity")
-                        if !viewModel.externalChanges.isEmpty {
-                            Text("\(viewModel.externalChanges.count)")
-                                .font(.caption2)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .foregroundStyle(.white)
-                                .background(Color.orange)
-                                .clipShape(Capsule())
-                        } else if !viewModel.activityLog.isEmpty {
-                            Text("\(viewModel.activityLog.count)")
-                                .font(.caption2)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.secondary.opacity(0.2))
-                                .clipShape(Capsule())
-                        }
-                    }
-                } icon: {
-                    Image(systemName: viewModel.externalChanges.isEmpty ? "list.bullet.clipboard" : "exclamationmark.triangle.fill")
-                        .foregroundStyle(viewModel.externalChanges.isEmpty ? Color.primary : Color.orange)
-                }
-                .tag(ContentView.SidebarItem.activity)
             }
 
             Section("Categories") {
@@ -143,8 +128,6 @@ struct DetailView: View {
             URLSchemesListView(schemes: viewModel.filteredURLSchemes, title: "URL Schemes")
         case .backups:
             BackupsView()
-        case .activity:
-            ActivityView()
         case .category(let category):
             FileTypesListView(
                 fileTypes: viewModel.fileTypes(for: category),
@@ -1679,19 +1662,41 @@ extension AppViewModel {
 
 struct ToastView: View {
     let message: String?
+    let undoAction: (() -> Void)?
+    let onUndo: () -> Void
+
+    init(message: String?, undoAction: (() -> Void)? = nil, onUndo: @escaping () -> Void = {}) {
+        self.message = message
+        self.undoAction = undoAction
+        self.onUndo = onUndo
+    }
 
     var body: some View {
         ZStack {
             if let message = message {
-                Text(message)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Color.accentColor)
-                    .clipShape(Capsule())
-                    .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                HStack(spacing: 12) {
+                    Text(message)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.white)
+
+                    if undoAction != nil {
+                        Button("Undo") {
+                            onUndo()
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(.white.opacity(0.2))
+                        .clipShape(Capsule())
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Color.accentColor)
+                .clipShape(Capsule())
+                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .padding(.bottom, 20)
@@ -1755,259 +1760,69 @@ struct UpdateBanner: View {
     }
 }
 
-// MARK: - Activity View
+// MARK: - External Changes Alert
 
-struct ActivityView: View {
+struct ExternalChangesAlert: View {
     @EnvironmentObject var viewModel: AppViewModel
-    @State private var showingClearConfirmation = false
-
-    var groupedActivities: [(String, [ActivityLogEntry])] {
-        let calendar = Calendar.current
-        let now = Date()
-
-        var groups: [String: [ActivityLogEntry]] = [:]
-
-        for entry in viewModel.activityLog {
-            let key: String
-            if calendar.isDateInToday(entry.timestamp) {
-                key = "Today"
-            } else if calendar.isDateInYesterday(entry.timestamp) {
-                key = "Yesterday"
-            } else if let daysAgo = calendar.dateComponents([.day], from: entry.timestamp, to: now).day, daysAgo < 7 {
-                key = "This Week"
-            } else {
-                key = "Earlier"
-            }
-
-            groups[key, default: []].append(entry)
-        }
-
-        // Return in order
-        let order = ["Today", "Yesterday", "This Week", "Earlier"]
-        return order.compactMap { key in
-            guard let entries = groups[key], !entries.isEmpty else { return nil }
-            return (key, entries)
-        }
-    }
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
+            HStack(spacing: 16) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.orange)
+
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Activity")
+                    Text("Your Defaults Were Changed")
                         .font(.title2.bold())
-                    if !viewModel.externalChanges.isEmpty {
-                        Text("\(viewModel.externalChanges.count) external changes detected")
-                            .font(.subheadline)
-                            .foregroundStyle(.orange)
-                    } else {
-                        Text("History of your changes")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                    Text("Another app modified \(viewModel.externalChanges.count) of your default \(viewModel.externalChanges.count == 1 ? "handler" : "handlers")")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding()
+
+            Divider()
+
+            // List of changes
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(viewModel.externalChanges) { change in
+                        ExternalChangeRow(change: change)
+                        if change.id != viewModel.externalChanges.last?.id {
+                            Divider().padding(.leading, 16)
+                        }
                     }
+                }
+                .padding()
+            }
+
+            Divider()
+
+            // Footer buttons
+            HStack {
+                Button("Keep All Changes") {
+                    viewModel.dismissAllExternalChanges()
+                    dismiss()
                 }
 
                 Spacer()
 
-                if !viewModel.activityLog.isEmpty {
-                    Button(role: .destructive) {
-                        showingClearConfirmation = true
-                    } label: {
-                        Image(systemName: "trash")
-                    }
-                    .buttonStyle(.borderless)
-                    .help("Clear history")
-                    .confirmationDialog(
-                        "Clear Activity History?",
-                        isPresented: $showingClearConfirmation,
-                        titleVisibility: .visible
-                    ) {
-                        Button("Clear All", role: .destructive) {
-                            viewModel.clearActivityLog()
-                        }
-                        Button("Cancel", role: .cancel) {}
-                    } message: {
-                        Text("This will permanently delete all activity history. This action cannot be undone.")
-                    }
+                Button("Revert All") {
+                    viewModel.revertAllExternalChanges()
+                    dismiss()
                 }
+                .buttonStyle(.borderedProminent)
             }
             .padding()
-            .background(Color(nsColor: .windowBackgroundColor))
-
-            Divider()
-
-            if viewModel.activityLog.isEmpty && viewModel.externalChanges.isEmpty {
-                VStack(spacing: 16) {
-                    Spacer()
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.system(size: 48))
-                        .foregroundStyle(.secondary)
-                    Text("No Activity Yet")
-                        .font(.title2.bold())
-                    Text("Changes you make will appear here")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
-                        // External Changes Section
-                        if !viewModel.externalChanges.isEmpty {
-                            Section {
-                                ForEach(viewModel.externalChanges) { change in
-                                    ExternalChangeRow(change: change)
-                                    if change.id != viewModel.externalChanges.last?.id {
-                                        Divider().padding(.leading, 60)
-                                    }
-                                }
-                            } header: {
-                                ExternalChangesHeader()
-                            }
-                        }
-
-                        // Grouped Activity Log
-                        ForEach(groupedActivities, id: \.0) { group, entries in
-                            Section {
-                                ForEach(entries) { entry in
-                                    ActivityRow(entry: entry)
-                                    if entry.id != entries.last?.id {
-                                        Divider().padding(.leading, 60)
-                                    }
-                                }
-                            } header: {
-                                ActivitySectionHeader(title: group, entries: entries)
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-            }
         }
-        .navigationTitle("Activity")
+        .frame(width: 480, height: 400)
     }
 }
-
-struct ExternalChangesHeader: View {
-    @EnvironmentObject var viewModel: AppViewModel
-
-    var body: some View {
-        HStack {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
-            Text("External Changes")
-                .font(.subheadline.weight(.semibold))
-            Spacer()
-            Button("Revert All") {
-                viewModel.revertAllExternalChanges()
-            }
-            .buttonStyle(.borderless)
-            .font(.caption)
-            Button("Dismiss") {
-                viewModel.dismissAllExternalChanges()
-            }
-            .buttonStyle(.borderless)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 4)
-        .background(Color(nsColor: .windowBackgroundColor))
-    }
-}
-
-struct ActivitySectionHeader: View {
-    let title: String
-    let entries: [ActivityLogEntry]
-    @EnvironmentObject var viewModel: AppViewModel
-    @State private var showingUndoConfirm = false
-
-    var undoableEntries: [ActivityLogEntry] {
-        entries.filter { $0.canUndo }
-    }
-
-    // Consolidate changes: if .cpp changed A→B→C, we only want to restore to A
-    var consolidatedUndos: [(target: String, originalApp: String, originalBundleID: String)] {
-        var seen = Set<String>()
-        var result: [(target: String, originalApp: String, originalBundleID: String)] = []
-
-        // Process in reverse (oldest first) to get the original state
-        for entry in undoableEntries.reversed() {
-            let key = "\(entry.action.rawValue):\(entry.target)"
-            if !seen.contains(key), let oldApp = entry.oldValue, let oldBundleID = entry.oldBundleID {
-                seen.insert(key)
-                result.append((entry.target, oldApp, oldBundleID))
-            }
-        }
-        return result
-    }
-
-    var body: some View {
-        HStack {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Spacer()
-            if !undoableEntries.isEmpty {
-                Button("Undo All (\(consolidatedUndos.count))") {
-                    showingUndoConfirm = true
-                }
-                .buttonStyle(.borderless)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 4)
-        .background(Color(nsColor: .windowBackgroundColor))
-        .confirmationDialog("Undo \(title) Changes", isPresented: $showingUndoConfirm) {
-            Button("Undo \(consolidatedUndos.count) Changes") {
-                performConsolidatedUndo()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text(undoSummary)
-        }
-    }
-
-    var undoSummary: String {
-        let items = consolidatedUndos.prefix(5).map { ".\($0.target) → \($0.originalApp)" }
-        var summary = items.joined(separator: "\n")
-        if consolidatedUndos.count > 5 {
-            summary += "\n...and \(consolidatedUndos.count - 5) more"
-        }
-        return summary
-    }
-
-    func performConsolidatedUndo() {
-        for undo in consolidatedUndos {
-            // Find if it's a file type or scheme
-            if let entry = undoableEntries.first(where: { $0.target == undo.target }) {
-                switch entry.action {
-                case .setFileTypeHandler:
-                    viewModel.setDefaultHandler(forExtension: undo.target, bundleID: undo.originalBundleID, skipLog: true)
-                case .setSchemeHandler:
-                    viewModel.setDefaultHandler(forScheme: undo.target, bundleID: undo.originalBundleID, skipLog: true)
-                default:
-                    break
-                }
-            }
-        }
-
-        // Log as single bulk undo
-        let entry = ActivityLogEntry(
-            timestamp: Date(),
-            action: .bulkChange,
-            target: "\(consolidatedUndos.count)",
-            oldValue: nil,
-            newValue: "restored \(title.lowercased()) changes"
-        )
-        viewModel.activityLog.insert(entry, at: 0)
-        viewModel.showToast("Restored \(consolidatedUndos.count) handlers")
-    }
-}
-
-// MARK: - External Change Row
 
 struct ExternalChangeRow: View {
     let change: ExternalChange
@@ -2031,277 +1846,47 @@ struct ExternalChangeRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // App transition visual
-            HStack(spacing: 6) {
+            // Target (extension or scheme)
+            Text(change.displayTarget)
+                .font(.system(.body, design: .monospaced, weight: .medium))
+                .foregroundStyle(change.type == .fileType ? .blue : .purple)
+                .frame(width: 80, alignment: .leading)
+
+            // Old app
+            HStack(spacing: 4) {
                 if let icon = oldAppIcon {
                     Image(nsImage: icon)
                         .resizable()
                         .interpolation(.high)
-                        .frame(width: 24, height: 24)
-                        .opacity(0.5)
-                } else if change.oldBundleID != nil {
-                    Image(systemName: "questionmark.app")
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("—")
-                        .font(.caption.weight(.bold))
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(.secondary)
+                        .frame(width: 20, height: 20)
                 }
-
-                Image(systemName: "arrow.right")
-                    .font(.caption2)
+                Text(change.oldAppName ?? "None")
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .frame(width: 100, alignment: .leading)
 
+            Image(systemName: "arrow.right")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+
+            // New app
+            HStack(spacing: 4) {
                 if let icon = newAppIcon {
                     Image(nsImage: icon)
                         .resizable()
                         .interpolation(.high)
-                        .frame(width: 24, height: 24)
-                } else if change.newBundleID != nil {
-                    Image(systemName: "questionmark.app")
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("—")
-                        .font(.caption.weight(.bold))
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(.secondary)
+                        .frame(width: 20, height: 20)
                 }
-            }
-            .frame(width: 72)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(change.displayTarget)
-                    .font(.body.weight(.medium))
-
-                Text("\(change.oldAppName ?? "Unknown") → \(change.newAppName ?? "Unknown")")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(change.newAppName ?? "None")
+                    .font(.subheadline)
+                    .lineLimit(1)
             }
 
             Spacer()
-
-            HStack(spacing: 8) {
-                Button {
-                    viewModel.revertExternalChange(change)
-                } label: {
-                    Image(systemName: "arrow.uturn.backward")
-                }
-                .buttonStyle(.borderless)
-                .help("Revert to \(change.oldAppName ?? "previous")")
-
-                Button {
-                    viewModel.dismissExternalChange(change)
-                } label: {
-                    Image(systemName: "xmark")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.borderless)
-                .help("Keep this change")
-            }
         }
-        .padding(.vertical, 10)
-    }
-}
-
-// MARK: - Activity Row
-
-struct ActivityRow: View {
-    let entry: ActivityLogEntry
-    @EnvironmentObject var viewModel: AppViewModel
-
-    var oldAppIcon: NSImage? {
-        guard let bundleID = entry.oldBundleID,
-              let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
-            return nil
-        }
-        return NSWorkspace.shared.icon(forFile: url.path)
-    }
-
-    var newAppIcon: NSImage? {
-        guard let bundleID = entry.newBundleID,
-              let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
-            return nil
-        }
-        return NSWorkspace.shared.icon(forFile: url.path)
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            // App icons for handler changes, otherwise colored icon
-            if showsAppIcons {
-                HStack(spacing: 4) {
-                    if let icon = oldAppIcon {
-                        Image(nsImage: icon)
-                            .resizable()
-                            .interpolation(.high)
-                            .frame(width: 20, height: 20)
-                            .opacity(0.5)
-                    } else if entry.oldBundleID != nil {
-                        // App was set but can't find it anymore
-                        Image(systemName: "questionmark.app")
-                            .frame(width: 20, height: 20)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        // Was "none"
-                        Text("—")
-                            .font(.caption.weight(.bold))
-                            .frame(width: 20, height: 20)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 8))
-                        .foregroundStyle(.secondary)
-
-                    if let icon = newAppIcon {
-                        Image(nsImage: icon)
-                            .resizable()
-                            .interpolation(.high)
-                            .frame(width: 20, height: 20)
-                    } else if entry.newBundleID != nil {
-                        Image(systemName: "questionmark.app")
-                            .frame(width: 20, height: 20)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("—")
-                            .font(.caption.weight(.bold))
-                            .frame(width: 20, height: 20)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .frame(width: 56)
-            } else if entry.action == .bulkChange, let icon = newAppIcon {
-                // For bulk changes, show the new app's icon
-                Image(nsImage: icon)
-                    .resizable()
-                    .interpolation(.high)
-                    .frame(width: 32, height: 32)
-            } else {
-                ZStack {
-                    Circle()
-                        .fill(iconColor.opacity(0.15))
-                        .frame(width: 36, height: 36)
-
-                    Image(systemName: iconName)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(iconColor)
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(targetDisplay)
-                        .font(.body.weight(.medium))
-
-                    if let detail = actionDetail {
-                        Text(detail)
-                            .font(.body)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                }
-            }
-
-            Spacer()
-
-            Text(formattedTime)
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-
-            if entry.canUndo {
-                Button {
-                    viewModel.undoActivity(entry)
-                } label: {
-                    Image(systemName: "arrow.uturn.backward")
-                }
-                .buttonStyle(.borderless)
-                .help("Undo this change")
-            } else if isFromNone {
-                Image(systemName: "arrow.uturn.backward")
-                    .foregroundStyle(.quaternary)
-                    .help("Cannot undo: macOS doesn't support removing default handlers")
-            }
-        }
-        .padding(.vertical, 10)
-    }
-
-    var isFromNone: Bool {
-        switch entry.action {
-        case .setFileTypeHandler, .setSchemeHandler:
-            return entry.oldValue == nil && entry.newValue != nil
-        default:
-            return false
-        }
-    }
-
-    var showsAppIcons: Bool {
-        // Show A → B format for individual handler changes
-        // Colored circle for backup/restore/bulk actions
-        switch entry.action {
-        case .setFileTypeHandler, .setSchemeHandler:
-            return true
-        case .bulkChange, .restore, .createBackup:
-            return false
-        }
-    }
-
-    var targetDisplay: String {
-        switch entry.action {
-        case .setFileTypeHandler: return ".\(entry.target)"
-        case .setSchemeHandler: return "\(entry.target)://"
-        case .bulkChange:
-            let count = Int(entry.target) ?? 0
-            return "Changed \(count) \(count == 1 ? "file type" : "file types")"
-        case .restore: return "Restored backup"
-        case .createBackup: return "Created backup"
-        }
-    }
-
-    var actionDetail: String? {
-        switch entry.action {
-        case .setFileTypeHandler, .setSchemeHandler:
-            let from = entry.oldValue ?? "none"
-            let to = entry.newValue ?? "none"
-            return "\(from) → \(to)"
-        case .bulkChange:
-            return "to \(entry.newValue ?? "unknown")"
-        case .restore:
-            return entry.target
-        case .createBackup:
-            return nil
-        }
-    }
-
-    var iconName: String {
-        switch entry.action {
-        case .setFileTypeHandler: return "doc"
-        case .setSchemeHandler: return "link"
-        case .bulkChange: return "square.stack.3d.up"
-        case .restore: return "arrow.counterclockwise"
-        case .createBackup: return "arrow.down.doc"
-        }
-    }
-
-    var iconColor: Color {
-        switch entry.action {
-        case .setFileTypeHandler: return .blue
-        case .setSchemeHandler: return .purple
-        case .bulkChange: return .indigo
-        case .restore: return .orange
-        case .createBackup: return .green
-        }
-    }
-
-    var formattedTime: String {
-        let calendar = Calendar.current
-        if calendar.isDateInToday(entry.timestamp) {
-            return entry.timestamp.formatted(date: .omitted, time: .shortened)
-        } else {
-            return entry.timestamp.formatted(date: .abbreviated, time: .shortened)
-        }
+        .padding(.vertical, 8)
     }
 }
 

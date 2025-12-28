@@ -17,6 +17,7 @@ final class AppViewModel: ObservableObject {
         didSet { saveActivityLog() }
     }
     @Published var toastMessage: String?
+    @Published var undoAction: (() -> Void)?
     @Published var updateInfo: UpdateInfo?
     @Published var externalChanges: [ExternalChange] = []
     @Published var lastSnapshotDate: Date?
@@ -361,6 +362,17 @@ final class AppViewModel: ObservableObject {
                         newBundleID: newHandler?.bundleIdentifier
                     )
                     activityLog.insert(entry, at: 0)
+
+                    // Show toast with undo option
+                    let newName = newHandler?.name ?? "Unknown"
+                    if let oldBundleID = oldHandler?.bundleIdentifier {
+                        showToast("Changed .\(ext) to \(newName)") { [weak self] in
+                            self?.setDefaultHandler(forExtension: ext, bundleID: oldBundleID, skipLog: true)
+                            self?.showToast("Reverted .\(ext)")
+                        }
+                    } else {
+                        showToast("Changed .\(ext) to \(newName)")
+                    }
                 }
 
                 // Update snapshot so our changes aren't detected as external
@@ -397,6 +409,17 @@ final class AppViewModel: ObservableObject {
                         newBundleID: newHandler?.bundleIdentifier
                     )
                     activityLog.insert(entry, at: 0)
+
+                    // Show toast with undo option
+                    let newName = newHandler?.name ?? "Unknown"
+                    if let oldBundleID = oldHandler?.bundleIdentifier {
+                        showToast("Changed \(scheme):// to \(newName)") { [weak self] in
+                            self?.setDefaultHandler(forScheme: scheme, bundleID: oldBundleID, skipLog: true)
+                            self?.showToast("Reverted \(scheme)://")
+                        }
+                    } else {
+                        showToast("Changed \(scheme):// to \(newName)")
+                    }
                 }
 
                 // Update snapshot so our changes aren't detected as external
@@ -619,14 +642,22 @@ final class AppViewModel: ObservableObject {
 
     // MARK: - Toast
 
-    func showToast(_ message: String) {
+    func showToast(_ message: String, undoAction: (() -> Void)? = nil) {
         toastMessage = message
+        self.undoAction = undoAction
         Task {
-            try? await Task.sleep(nanoseconds: 2_500_000_000) // 2.5 seconds
+            try? await Task.sleep(nanoseconds: 4_000_000_000) // 4 seconds for undo opportunity
             if toastMessage == message {
                 toastMessage = nil
+                self.undoAction = nil
             }
         }
+    }
+
+    func performUndo() {
+        undoAction?()
+        toastMessage = nil
+        undoAction = nil
     }
 
     // MARK: - Backup Management
