@@ -12,9 +12,12 @@
 
 A macOS utility to view and manage default applications for file types and URL schemes.
 
-| | |
+| Main Screen | Dark Mode |
 |:-:|:-:|
 | ![Main Screen](assets/main-screen.png?raw=true) | ![Dark Mode](assets/dark-mode.png?raw=true) |
+
+| URL Schemes | Change All From App |
+|:-:|:-:|
 | ![URL Schemes](assets/url-schemes.png?raw=true) | ![Change All From App](assets/change-all-from-app.png?raw=true) |
 
 ## Features
