@@ -52,7 +52,7 @@ struct OpenerApp: App {
 
             // Replace default About with custom
             CommandGroup(replacing: .appInfo) {
-                Button("About Opener") {
+                Button("About Default Opener") {
                     openWindow(id: "about")
                 }
             }
@@ -71,7 +71,7 @@ struct OpenerApp: App {
         }
 
         // About Window
-        Window("About Opener", id: "about") {
+        Window("About Default Opener", id: "about") {
             AboutView()
         }
         .windowStyle(.hiddenTitleBar)
@@ -122,7 +122,7 @@ struct AboutView: View {
                 .frame(height: 16)
 
             // App Name
-            Text("Opener")
+            Text("Default Opener")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
 
             Spacer()

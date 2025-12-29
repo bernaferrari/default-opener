@@ -22,7 +22,7 @@ struct ContentView: View {
             DetailView(selection: selectedSidebarItem)
         }
         .searchable(text: $viewModel.searchText, prompt: "Search file types, apps...")
-        .navigationTitle("Opener")
+        .navigationTitle("Default Opener")
         .overlay(alignment: .bottom) {
             ToastView(message: viewModel.toastMessage, undoAction: viewModel.undoAction) {
                 viewModel.performUndo()
@@ -1429,7 +1429,7 @@ struct BackupsView: View {
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
-        panel.message = "Select an Opener backup file to restore"
+        panel.message = "Select a Default Opener backup file to restore"
 
         if panel.runModal() == .OK, let url = panel.url {
             do {
@@ -1646,7 +1646,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
-                Text("Opener manages your default applications for file types and URL schemes.")
+                Text("Default Opener manages your default applications for file types and URL schemes.")
             }
 
             Section("About") {
