@@ -37,20 +37,23 @@ struct ContentView: View {
                     viewModel.refresh()
                 } label: {
                     Image(systemName: "arrow.clockwise")
-                        .rotationEffect(.degrees(viewModel.isLoading ? refreshRotation : 0))
+                        .rotationEffect(.degrees(refreshRotation))
                 }
                 .help("Refresh")
                 .disabled(viewModel.isLoading)
             }
         }
-        .task(id: viewModel.isLoading) {
-            guard viewModel.isLoading else { return }
-            // Continuous rotation while loading
-            while viewModel.isLoading {
-                withAnimation(.linear(duration: 0.6)) {
-                    refreshRotation += 360
+        .onChange(of: viewModel.isLoading) { isLoading in
+            if isLoading {
+                // Start spinning
+                withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
+                    refreshRotation = 360
                 }
-                try? await Task.sleep(nanoseconds: 600_000_000)
+            } else {
+                // Stop and reset
+                withAnimation(.default) {
+                    refreshRotation = 0
+                }
             }
         }
         .onAppear {
@@ -1759,11 +1762,8 @@ struct ToastView: View {
                             onUndo()
                         }
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.9))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(.white.opacity(0.2))
-                        .clipShape(Capsule())
+                        .foregroundStyle(.white)
+                        .underline()
                     }
                 }
                 .padding(.horizontal, 16)
