@@ -43,14 +43,12 @@ struct ContentView: View {
                 .disabled(viewModel.isLoading)
             }
         }
-        .onChange(of: viewModel.isLoading) { isLoading in
+        .onChange(of: viewModel.isLoading) { _, isLoading in
             if isLoading {
-                // Start spinning
                 withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
                     refreshRotation = 360
                 }
             } else {
-                // Stop and reset
                 withAnimation(.default) {
                     refreshRotation = 0
                 }
@@ -253,21 +251,9 @@ struct FileTypeRow: View {
     @State private var isExpanded = false
     @State private var showingAllApps = false
 
-    var hasValidDescription: Bool {
-        // Hide description for dynamic UTIs and when there's no meaningful description
-        guard !fileType.uti.hasPrefix("dyn.") else { return false }
-        guard let description = fileType.utiDescription else { return false }
-        let lower = description.lowercased()
-        // Hide if it's empty, says "unregistered", or is just the UTI repeated
-        if description.isEmpty || lower == "unregistered" || description == fileType.uti {
-            return false
-        }
-        return true
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 // Leading indicator - fixed width to prevent jitter
                 ZStack {
                     if isSelectionMode {
@@ -291,13 +277,10 @@ struct FileTypeRow: View {
                 // Extension badge
                 ExtensionBadge(ext: fileType.fileExtension)
 
-                // Only show description for registered UTIs with valid descriptions
-                if hasValidDescription {
-                    Text(fileType.utiDescription!)
-                        .font(.body)
-                }
-
-                Spacer()
+                // Arrow connector
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.quaternary)
 
                 // Current handler - clickable to show picker
                 Menu {
@@ -340,6 +323,8 @@ struct FileTypeRow: View {
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
+
+                Spacer()
             }
             .padding(.vertical, 8)
             .contentShape(Rectangle())
@@ -544,8 +529,7 @@ struct AppPickerSheet: View {
         for ext in extensions {
             if let fileType = viewModel.fileTypes.first(where: { $0.fileExtension == ext }) {
                 for handler in fileType.availableHandlers {
-                    if !seen.contains(handler.bundleIdentifier) &&
-                       !Self.popularEditorBundleIDs.contains(handler.bundleIdentifier) {
+                    if !seen.contains(handler.bundleIdentifier) {
                         seen.insert(handler.bundleIdentifier)
                         apps.append(handler)
                     }
@@ -557,8 +541,11 @@ struct AppPickerSheet: View {
     }
 
     private var popularEditors: [AppInfo] {
-        Self.popularEditorBundleIDs.compactMap { bundleID in
-            allApps.first { $0.bundleIdentifier == bundleID }
+        let registeredIDs = Set(registeredHandlers.map(\.bundleIdentifier))
+        return Self.popularEditorBundleIDs.compactMap { bundleID in
+            // Skip if already shown in registered handlers
+            guard !registeredIDs.contains(bundleID) else { return nil }
+            return allApps.first { $0.bundleIdentifier == bundleID }
         }
     }
 
@@ -627,7 +614,7 @@ struct AppPickerSheet: View {
                         // Registered Handlers Section - should come first
                         let filteredRegistered = filteredApps(registeredHandlers)
                         if !filteredRegistered.isEmpty {
-                            AppSection(title: "Registered for \(extensions.count == 1 ? "This Type" : "These Types")") {
+                            AppSection(title: "Registered for \(extensions.count == 1 ? "this type" : "these types")") {
                                 ForEach(filteredRegistered, id: \.bundleIdentifier) { app in
                                     AppRow(
                                         app: app,
@@ -966,7 +953,7 @@ struct URLSchemePickerSheet: View {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         // Registered Handlers Section
                         if !filteredRegistered.isEmpty {
-                            AppSection(title: "Registered for This Scheme") {
+                            AppSection(title: "Registered for this scheme") {
                                 ForEach(filteredRegistered, id: \.bundleIdentifier) { app in
                                     AppRow(
                                         app: app,
@@ -1088,7 +1075,7 @@ struct URLSchemeRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 // Leading indicator - fixed width to match FileTypeRow
                 ZStack {
                     Image(systemName: "chevron.right")
@@ -1107,12 +1094,10 @@ struct URLSchemeRow: View {
                     .background(Color.blue.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
 
-                if let description = scheme.description {
-                    Text(description)
-                        .font(.body)
-                }
-
-                Spacer()
+                // Arrow connector
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.quaternary)
 
                 // Current handler - clickable menu
                 Menu {
@@ -1155,6 +1140,8 @@ struct URLSchemeRow: View {
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
+
+                Spacer()
             }
             .padding(.vertical, 8)
             .contentShape(Rectangle())
