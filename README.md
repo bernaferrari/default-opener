@@ -103,8 +103,8 @@ swift build -c release
 # Binary is at .build/release/opener
 
 # Build GUI (requires Xcode)
-xcodebuild -project OpenerApp/OpenerApp.xcodeproj -scheme Opener -configuration Release
-# App is at build/Release/Opener.app
+xcodebuild -project DefaultOpener/DefaultOpener.xcodeproj -scheme DefaultOpener -configuration Release
+# App is in build/Release/
 ```
 
 ## CLI Usage
