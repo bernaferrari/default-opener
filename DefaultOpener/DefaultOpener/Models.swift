@@ -3,7 +3,8 @@ import AppKit
 
 // MARK: - App Info Model
 
-struct AppInfo: Identifiable, Hashable {
+// NSImage isn't Sendable; AppInfo is consumed on the main thread.
+struct AppInfo: Identifiable, Hashable, @unchecked Sendable {
     var id: String { bundleIdentifier }
     let bundleIdentifier: String
     let name: String
