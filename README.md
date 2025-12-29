@@ -5,16 +5,16 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/platform-macOS%2013%2B-blue" alt="macOS 13+">
+  <img src="https://img.shields.io/badge/platform-macOS%2014%2B-blue" alt="macOS 14+">
   <img src="https://img.shields.io/badge/Swift-6-orange" alt="Swift 6">
   <img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="Apache 2.0 License">
 </p>
 
-A macOS utility to view and manage default applications for file types and URL schemes.
+Ever installed an app and suddenly all your files open with it? Default Opener gives you back control over which apps handle your files and URLs.
 
-| Main Screen | Dark Mode |
-|:-:|:-:|
-| ![Main Screen](assets/main-screen.png?raw=true) | ![Dark Mode](assets/dark-mode.png?raw=true) |
+<p align="center">
+  <img src="assets/main-screen.png" alt="Main Screen" width="700">
+</p>
 
 | URL Schemes | Change All From App |
 |:-:|:-:|
@@ -22,12 +22,12 @@ A macOS utility to view and manage default applications for file types and URL s
 
 ## Features
 
-- View and change default apps for 100+ file extensions
-- Manage URL scheme handlers (http, mailto, ssh, etc.)
-- Bulk operations - change multiple file types at once
-- Backup and restore your preferences
-- Instant undo via toast notification
-- Detect when apps hijack your file associations
+- **100+ file extensions** — Browse and change defaults for documents, code, images, videos, and more
+- **URL schemes** — Control which app handles http, mailto, ssh, and other protocols
+- **Bulk operations** — Select multiple file types and change them all at once
+- **Backup & restore** — Save your preferences and restore them anytime
+- **Instant undo** — Changed something by mistake? One-click undo via toast notification
+- **Hijack detection** — Get notified when apps change your defaults without asking
 
 ## Installation
 
@@ -39,9 +39,19 @@ cd default-opener
 xcodebuild -project DefaultOpener/DefaultOpener.xcodeproj -scheme DefaultOpener -configuration Release
 ```
 
+## CLI
+
+Prefer the command line? There's a CLI too. See [CLI documentation](docs/CLI.md) for usage.
+
+```bash
+opener set .json com.microsoft.VSCode
+opener set https com.apple.Safari
+opener backup
+```
+
 ## Requirements
 
-- macOS 13.0+
+- macOS 14.0+
 
 ## License
 
