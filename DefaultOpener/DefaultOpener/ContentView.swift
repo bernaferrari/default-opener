@@ -19,7 +19,7 @@ struct ContentView: View {
         NavigationSplitView {
             SidebarView(selection: $selectedSidebarItem)
         } detail: {
-            DetailView(selection: selectedSidebarItem)
+            DetailView(selection: $selectedSidebarItem)
         }
         .searchable(text: $viewModel.searchText, prompt: "Search file types, apps...")
         .navigationTitle("Default Opener")
@@ -118,7 +118,7 @@ struct SidebarView: View {
 // MARK: - Detail View
 
 struct DetailView: View {
-    let selection: ContentView.SidebarItem?
+    @Binding var selection: ContentView.SidebarItem?
     @EnvironmentObject var viewModel: AppViewModel
 
     var body: some View {
@@ -135,7 +135,7 @@ struct DetailView: View {
                 title: category.rawValue
             )
         case .app(let bundleID):
-            AppFileTypesView(bundleID: bundleID)
+            AppFileTypesView(bundleID: bundleID, selection: $selection)
         case nil:
             Text("Select an item from the sidebar")
                 .foregroundStyle(.secondary)
@@ -454,6 +454,7 @@ struct AppPickerSheet: View {
     @State private var allApps: [AppInfo] = []
     @State private var isLoading = true
     @State private var selectedApp: AppInfo?
+    @FocusState private var isSearchFocused: Bool
 
     // Popular code editors that users commonly want
     static let popularEditorBundleIDs: [String] = [
@@ -595,12 +596,14 @@ struct AppPickerSheet: View {
                     .foregroundStyle(.secondary)
                 TextField("Search apps...", text: $searchText)
                     .textFieldStyle(.plain)
+                    .focused($isSearchFocused)
             }
             .padding(10)
             .background(Color.secondary.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .padding(.horizontal)
             .padding(.vertical, 8)
+            .onAppear { isSearchFocused = true }
 
             // App list
             if isLoading {
@@ -888,6 +891,7 @@ struct URLSchemePickerSheet: View {
     @State private var searchText = ""
     @State private var allApps: [AppInfo] = []
     @State private var isLoading = true
+    @FocusState private var isSearchFocused: Bool
 
     private var filteredRegistered: [AppInfo] {
         if searchText.isEmpty { return registeredHandlers }
@@ -935,12 +939,14 @@ struct URLSchemePickerSheet: View {
                     .foregroundStyle(.secondary)
                 TextField("Search apps...", text: $searchText)
                     .textFieldStyle(.plain)
+                    .focused($isSearchFocused)
             }
             .padding(10)
             .background(Color.secondary.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .padding(.horizontal)
             .padding(.vertical, 8)
+            .onAppear { isSearchFocused = true }
 
             // App list
             if isLoading {
@@ -1247,6 +1253,7 @@ struct URLSchemeRow: View {
 
 struct AppFileTypesView: View {
     let bundleID: String
+    @Binding var selection: ContentView.SidebarItem?
     @EnvironmentObject var viewModel: AppViewModel
     @State private var showingBulkChange = false
 
@@ -1306,7 +1313,9 @@ struct AppFileTypesView: View {
                 mode: .bulk(
                     extensions: handledFileTypes.map(\.fileExtension),
                     currentApp: app,
-                    onComplete: {}
+                    onComplete: {
+                        selection = .allFileTypes
+                    }
                 )
             )
         }
@@ -1750,7 +1759,6 @@ struct ToastView: View {
                         }
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
-                        .underline()
                     }
                 }
                 .padding(.horizontal, 16)
