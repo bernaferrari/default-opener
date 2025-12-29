@@ -39,16 +39,6 @@ cd default-opener
 xcodebuild -project DefaultOpener/DefaultOpener.xcodeproj -scheme DefaultOpener -configuration Release
 ```
 
-## CLI
-
-Prefer the command line? There's a CLI too. See [CLI documentation](docs/CLI.md) for usage.
-
-```bash
-opener set .json com.microsoft.VSCode
-opener set https com.apple.Safari
-opener backup
-```
-
 ## Requirements
 
 - macOS 14.0+
