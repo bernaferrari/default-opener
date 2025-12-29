@@ -42,7 +42,6 @@ xcodebuild -project DefaultOpener/DefaultOpener.xcodeproj -scheme DefaultOpener 
 ## Requirements
 
 - macOS 13.0+
-- Non-sandboxed (cannot be distributed on Mac App Store)
 
 ## License
 
