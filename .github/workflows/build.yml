@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_16.app
+
+    - name: Show Xcode version
+      run: xcodebuild -version
+
+    - name: Show Swift version
+      run: swift --version
+
+    - name: Resolve package dependencies
+      run: xcodebuild -resolvePackageDependencies -project DefaultOpener/DefaultOpener.xcodeproj
+
+    - name: Build
+      run: xcodebuild -scheme DefaultOpener -project DefaultOpener/DefaultOpener.xcodeproj -configuration Release build CODE_SIGNING_ALLOWED=NO

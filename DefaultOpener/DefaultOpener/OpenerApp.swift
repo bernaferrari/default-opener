@@ -72,7 +72,7 @@ struct DefaultOpenerApp: App {
 
         // About Window
         Window("About Default Opener", id: "about") {
-            AboutView()
+            AboutView(updater: updaterController.updater)
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
@@ -88,7 +88,13 @@ struct DefaultOpenerApp: App {
 // MARK: - About View
 
 struct AboutView: View {
-    @Environment(\.dismiss) private var dismiss
+    let updater: SPUUpdater
+    @ObservedObject private var checkForUpdatesViewModel: CheckForUpdatesViewModel
+
+    init(updater: SPUUpdater) {
+        self.updater = updater
+        self.checkForUpdatesViewModel = CheckForUpdatesViewModel(updater: updater)
+    }
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
@@ -96,12 +102,6 @@ struct AboutView: View {
 
     private var buildNumber: String {
         Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-    }
-
-    private var currentYear: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy"
-        return formatter.string(from: Date())
     }
 
     var body: some View {
@@ -146,6 +146,16 @@ struct AboutView: View {
             Spacer()
                 .frame(height: 24)
 
+            // Check for Updates
+            Button(action: updater.checkForUpdates) {
+                Text("Check for Updates")
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .disabled(!checkForUpdatesViewModel.canCheckForUpdates)
+
+            Spacer()
+                .frame(height: 16)
+
             // Links
             HStack(spacing: 16) {
                 Link(destination: URL(string: "https://github.com/bernaferrari/default-opener")!) {
@@ -171,19 +181,14 @@ struct AboutView: View {
             Spacer()
 
             // Copyright
-            VStack(spacing: 2) {
-                Text("Copyright © \(currentYear) Bernardo Ferrari")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.tertiary)
-                Text("All rights reserved.")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.tertiary)
-            }
+            Text("Copyright © 2025 Bernardo Ferrari")
+                .font(.system(size: 10))
+                .foregroundStyle(.tertiary)
 
             Spacer()
                 .frame(height: 16)
         }
-        .frame(width: 300, height: 360)
+        .frame(width: 300, height: 380)
         .background(.regularMaterial)
     }
 }

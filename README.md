@@ -1,26 +1,40 @@
 # Default Opener
 
 <p align="center">
+  <img src="assets/header.png" alt="Default Opener" width="100%">
+</p>
+
+<p align="center">
   <b>Take back control of your default apps on macOS</b>
 </p>
 
 <p align="center">
   <a href="#features">Features</a> •
   <a href="#installation">Installation</a> •
+  <a href="#screenshots">Screenshots</a> •
   <a href="#cli-usage">CLI Usage</a> •
-  <a href="#gui-app">GUI App</a> •
   <a href="#backup--restore">Backup & Restore</a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/platform-macOS%2013%2B-blue" alt="macOS 13+">
-  <img src="https://img.shields.io/badge/Swift-5.9-orange" alt="Swift 5.9">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
+  <img src="https://img.shields.io/badge/Swift-6-orange" alt="Swift 6">
+  <img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="Apache 2.0 License">
 </p>
 
 ---
 
 **Default Opener** is a powerful macOS utility that lets you view and manage which applications open your files and URL schemes. Stop apps from hijacking your file associations without permission.
+
+## Screenshots
+
+| Main Screen | Dark Mode |
+|:-:|:-:|
+| ![Main Screen](assets/main-screen.png?raw=true) | ![Dark Mode](assets/dark-mode.png?raw=true) |
+
+| URL Schemes | Change All From App |
+|:-:|:-:|
+| ![URL Schemes](assets/url-schemes.png?raw=true) | ![Change All From App](assets/change-all-from-app.png?raw=true) |
 
 ## Why Default Opener?
 
@@ -288,7 +302,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+Apache License 2.0 - see [LICENSE](LICENSE) for details.
 
 ## Credits
 
