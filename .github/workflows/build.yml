@@ -8,19 +8,13 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Select Xcode
-      run: sudo xcode-select -s /Applications/Xcode_16.app
-
     - name: Show Xcode version
       run: xcodebuild -version
-
-    - name: Show Swift version
-      run: swift --version
 
     - name: Resolve package dependencies
       run: xcodebuild -resolvePackageDependencies -project DefaultOpener/DefaultOpener.xcodeproj
