@@ -20,4 +20,4 @@ jobs:
       run: xcodebuild -resolvePackageDependencies -project DefaultOpener/DefaultOpener.xcodeproj
 
     - name: Build
-      run: xcodebuild -scheme DefaultOpener -project DefaultOpener/DefaultOpener.xcodeproj -configuration Release build CODE_SIGNING_ALLOWED=NO
+      run: xcodebuild -scheme DefaultOpener -project DefaultOpener/DefaultOpener.xcodeproj -configuration Release build CODE_SIGNING_ALLOWED=NO CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION=YES
