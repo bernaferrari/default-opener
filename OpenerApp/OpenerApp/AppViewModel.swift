@@ -24,11 +24,11 @@ final class AppViewModel: ObservableObject {
 
     // Configure these for your GitHub repo
     static let githubOwner = "bernaferrari"
-    static let githubRepo = "Opener"
+    static let githubRepo = "default-opener"
     static let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
 
-    private let activityLogKey = "OpenerActivityLog"
-    private let snapshotKey = "OpenerHandlerSnapshot"
+    private let activityLogKey = "DefaultOpenerActivityLog"
+    private let snapshotKey = "DefaultOpenerHandlerSnapshot"
 
     enum Tab: String, CaseIterable {
         case fileTypes = "File Types"

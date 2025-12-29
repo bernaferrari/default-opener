@@ -28,7 +28,7 @@ struct CheckForUpdatesView: View {
 }
 
 @main
-struct OpenerApp: App {
+struct DefaultOpenerApp: App {
     @StateObject private var viewModel = AppViewModel()
     @Environment(\.openWindow) private var openWindow
 
@@ -148,7 +148,7 @@ struct AboutView: View {
 
             // Links
             HStack(spacing: 16) {
-                Link(destination: URL(string: "https://github.com/bernaferrari/Opener")!) {
+                Link(destination: URL(string: "https://github.com/bernaferrari/default-opener")!) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left.forwardslash.chevron.right")
                         Text("Source")
@@ -157,7 +157,7 @@ struct AboutView: View {
                 }
                 .buttonStyle(.plain)
 
-                Link(destination: URL(string: "https://github.com/bernaferrari/Opener/issues")!) {
+                Link(destination: URL(string: "https://github.com/bernaferrari/default-opener/issues")!) {
                     HStack(spacing: 4) {
                         Image(systemName: "ladybug")
                         Text("Report Bug")

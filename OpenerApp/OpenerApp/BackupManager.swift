@@ -14,7 +14,7 @@ class BackupManager {
         ).first!
 
         backupDirectory = appSupport
-            .appendingPathComponent("Opener", isDirectory: true)
+            .appendingPathComponent("DefaultOpener", isDirectory: true)
             .appendingPathComponent("backups", isDirectory: true)
     }
 
