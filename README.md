@@ -1,4 +1,4 @@
-# Opener
+# Default Opener
 
 <p align="center">
   <b>Take back control of your default apps on macOS</b>
@@ -20,17 +20,17 @@
 
 ---
 
-**Opener** is a powerful macOS utility that lets you view and manage which applications open your files and URL schemes. Stop apps from hijacking your file associations without permission.
+**Default Opener** is a powerful macOS utility that lets you view and manage which applications open your files and URL schemes. Stop apps from hijacking your file associations without permission.
 
-## Why Opener?
+## Why Default Opener?
 
-Ever installed an app that suddenly became the default for all your code files? Or wanted VS Code to open `.json` files instead of Xcode? Opener solves these frustrations:
+Ever installed an app that suddenly became the default for all your code files? Or wanted VS Code to open `.json` files instead of Xcode? Default Opener solves these frustrations:
 
 - **See what's happening**: View all file type associations at a glance
 - **Bulk operations**: Select multiple file types and change them all at once
 - **Filter by app**: See all files handled by a specific app and reassign them
 - **Backup & restore**: Save your preferences and restore them after system updates or new app installations
-- **Activity log**: Track all changes with full undo support
+- **Instant undo**: Changed something by mistake? Undo immediately via toast notification
 
 ## Features
 
@@ -38,47 +38,44 @@ Ever installed an app that suddenly became the default for all your code files? 
 - View default apps for 100+ common file extensions
 - See all available apps that can handle each file type
 - One-click to change the default handler
+- Right-click context menu for quick actions (Copy Extension, Copy UTI, Change Default)
 - Support for documents, code, images, video, audio, and archives
 
 ### URL Scheme Management
 - Manage `http://`, `https://`, `mailto:`, `ssh://`, and more
 - Change your default browser, email client, or other handlers
+- Right-click context menu for quick actions
 
 ### Bulk Operations
 - Filter file types by category (Code, Documents, Images, etc.)
 - Filter by current handler app
 - Select multiple file types and change them all at once
 - "Replace all" - change every file type from one app to another
-- Smart app picker with Popular Editors, Registered Handlers, and All Apps sections
+- Smart app picker with Registered Handlers, Popular Editors, and All Apps sections
 
 ### Backup & Restore
 - Create timestamped backups of all your associations
 - Import backups from any location (Dropbox, iCloud, USB drive, etc.)
 - Reveal backups in Finder for easy sharing
 - Preview changes before restoring
-- Restore selectively or completely
 - JSON format for easy inspection and sharing
 
-### Activity Log & Undo
-- Full history of all changes you make
-- **Undo any change** - single files or bulk operations
-- Activity persists across app restarts (last 30 days, max 100 entries)
-- Smart validation detects if handlers were changed outside the app
-- Clear log anytime from the Activity view
+### Instant Undo
+- Toast notification appears after every change
+- **Undo button** right in the toast - click within 4 seconds to revert
+- Works for single changes and bulk operations
 
 ### External Change Detection
 - **Automatically detects** when other apps hijack your file associations
-- Banner alert on launch when changes are found
+- Alert on launch when changes are found
 - See exactly which apps changed which file types
-- **Revert individual changes** or all at once
-- Dismiss changes to accept them as the new baseline
+- **Revert all changes** or keep them as the new baseline
 - Never be surprised by VS Code or Xcode taking over your files again
 
 ### Automatic Updates
-- Checks for new versions on GitHub automatically
-- Beautiful banner notification when updates are available
-- One-click download to GitHub releases page
-- Manual check available in Settings
+- Built-in Sparkle framework for seamless updates
+- Automatic update checks in the background
+- Manual check available via menu bar
 
 ## Requirements
 
@@ -89,17 +86,17 @@ Ever installed an app that suddenly became the default for all your code files? 
 
 ### Download
 
-Download the latest release from the [Releases](https://github.com/bernaferrari/Opener/releases) page:
-- **Opener.app** - GUI application (move to `/Applications`)
-- **opener** - CLI tool (move to `/usr/local/bin`)
+Download the latest release from the [Releases](https://github.com/bernaferrari/default-opener/releases) page:
+- **Default Opener.app** - GUI application (move to `/Applications`)
+- **default-opener** - CLI tool (move to `/usr/local/bin`)
 
-> **Note:** On first launch, right-click Opener.app and select "Open" to bypass Gatekeeper.
+> **Note:** On first launch, right-click the app and select "Open" to bypass Gatekeeper.
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/bernaferrari/Opener
-cd opener
+git clone https://github.com/bernaferrari/default-opener
+cd default-opener
 
 # Build CLI
 swift build -c release
@@ -181,25 +178,17 @@ opener apps Code
 
 ## GUI App
 
-The Opener app provides a beautiful native macOS interface for managing your file associations.
+The Default Opener app provides a beautiful native macOS interface for managing your file associations.
 
 ### Main Features
 
 - **Sidebar navigation**: Browse by category or by app
-- **Search**: Quickly find any file type or app
-- **Bulk selection**: Shift-click or Cmd-click to select multiple items
+- **Search**: Quickly find any file type or app (searches names and bundle IDs)
+- **Bulk selection**: Use selection mode to pick multiple items
 - **One-click change**: Click any file type to see available apps
+- **Right-click menu**: Copy extension, UTI, or change default quickly
 - **App view**: See all file types handled by a specific app
 - **Smart app discovery**: Popular editors like VS Code, Sublime, Cursor, and Zed shown first
-- **Clean UI**: Dynamic/unknown file types displayed cleanly without ugly internal identifiers
-
-### Activity Log
-
-- View all changes in the **Activity** sidebar item
-- Each entry shows what was changed, when, and by what
-- Click **Undo** to revert any change instantly
-- Bulk changes can be undone all at once
-- Validates that handlers weren't changed externally before undoing
 
 ### Backups in the GUI
 
@@ -210,17 +199,16 @@ The Opener app provides a beautiful native macOS interface for managing your fil
 
 ### Settings
 
-Access via **Opener > Settings** or `Cmd+,`:
+Access via **Default Opener > Settings** or `Cmd+,`:
 - View current version and build number
 - Check for updates manually
-- See if updates are available
 
 ### Tips
 
-- Use the search bar to quickly find file types
+- Use the search bar to quickly find file types (also searches bundle IDs like "microsoft")
 - Click on an app in the sidebar to see all files it handles
 - Use "Change All" to reassign all files from one app to another
-- The refresh button spins while loading - wait for it to stop before making changes
+- Right-click any row to copy information or change the default
 - Create a backup before installing new apps
 
 ## Supported File Types
@@ -257,7 +245,7 @@ Access via **Opener > Settings** or `Cmd+,`:
 
 ## How It Works
 
-Opener uses macOS's Launch Services framework to read and modify file type associations. The same APIs that the system uses when you right-click a file and select "Open With" → "Other..." → "Always Open With".
+Default Opener uses macOS's Launch Services framework to read and modify file type associations. The same APIs that the system uses when you right-click a file and select "Open With" → "Other..." → "Always Open With".
 
 Key APIs used:
 - `LSCopyDefaultRoleHandlerForContentType` - Get current default
@@ -267,11 +255,10 @@ Key APIs used:
 
 ## Privacy & Security
 
-- **No network access**: Opener works entirely offline (except for optional update checks)
+- **No network access**: Works entirely offline (except for optional update checks)
 - **No telemetry**: No data is collected or transmitted
 - **Open source**: Review the code yourself
-- **Non-sandboxed**: Required to access Launch Services APIs
-- **Update checks**: Only connects to GitHub API to check for new versions (can be disabled)
+- **Non-sandboxed**: Required to access Launch Services APIs (cannot be distributed on Mac App Store)
 
 ## Troubleshooting
 
@@ -295,26 +282,6 @@ The app may not have registered itself for that file type. Try:
 
 Make sure you're running the CLI tool or app with your user account, not as root.
 
-### Undo says "Handler was changed externally"?
-
-This means someone (or another app) changed the file association outside of Opener. The app will refresh to show the current state. Your activity log entry is now outdated.
-
-## For Developers
-
-### Setting Up Update Checks
-
-To enable automatic update checks for your fork:
-
-1. Edit `AppViewModel.swift`:
-```swift
-static let githubOwner = "your-username"
-static let githubRepo = "opener"
-```
-
-2. Create releases on GitHub with tags like `v1.0.0`, `v1.1.0`, etc.
-
-The app compares `CFBundleShortVersionString` with the latest GitHub release tag.
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -328,7 +295,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 Inspired by:
 - [SwiftDefaultApps](https://github.com/Lord-Kamina/SwiftDefaultApps)
 - [duti](https://github.com/moretension/duti)
-- [utiluti](https://scriptingosx.com/2025/03/new-tool-utiluti-sets-default-apps/)
 
 ---
 
