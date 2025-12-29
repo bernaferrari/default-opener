@@ -165,6 +165,11 @@ final class AppViewModel: ObservableObject {
 
             // Only report if both exist and differ (ignore new handlers or removed handlers)
             if let current = currentBundleID, let saved = savedBundleID, current != saved {
+                // Skip if we made this change ourselves (check activity log)
+                if wasChangeMadeByUs(target: fileType.fileExtension, newBundleID: current, since: snapshot.timestamp) {
+                    continue
+                }
+
                 let oldApp = getAppInfo(forBundleID: saved)
                 let change = ExternalChange(
                     type: .fileType,
@@ -184,6 +189,11 @@ final class AppViewModel: ObservableObject {
             let savedBundleID = snapshot.urlSchemes[scheme.scheme]
 
             if let current = currentBundleID, let saved = savedBundleID, current != saved {
+                // Skip if we made this change ourselves (check activity log)
+                if wasChangeMadeByUs(target: scheme.scheme, newBundleID: current, since: snapshot.timestamp) {
+                    continue
+                }
+
                 let oldApp = getAppInfo(forBundleID: saved)
                 let change = ExternalChange(
                     type: .urlScheme,
@@ -202,6 +212,39 @@ final class AppViewModel: ObservableObject {
         // Always save current state as new baseline after detection
         // This prevents Opener's own changes from being detected on restart
         saveHandlerSnapshot()
+    }
+
+    /// Check if a change was made by us (recorded in activity log) since the snapshot
+    private func wasChangeMadeByUs(target: String, newBundleID: String, since snapshotDate: Date) -> Bool {
+        // Check recent activity log entries
+        for entry in activityLog {
+            // Only check entries after the snapshot was taken
+            guard entry.timestamp > snapshotDate else { continue }
+
+            // Check if this entry matches the change
+            if entry.target == target {
+                // Direct match on target
+                if entry.newBundleID == newBundleID {
+                    return true
+                }
+                // For bulk changes, check the details
+                if entry.action == .bulkChange, let details = entry.bulkDetails {
+                    for detail in details {
+                        if detail.fileExtension == target {
+                            return true
+                        }
+                    }
+                }
+            }
+
+            // For bulk changes, the target is the count, so check details
+            if entry.action == .bulkChange, let details = entry.bulkDetails {
+                if details.contains(where: { $0.fileExtension == target }) && entry.newBundleID == newBundleID {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     func revertExternalChange(_ change: ExternalChange) {
@@ -806,5 +849,45 @@ final class AppViewModel: ObservableObject {
     private func getBackupsList() -> [BackupInfo] {
         let backupManager = BackupManager()
         return (try? backupManager.listBackups()) ?? []
+    }
+}
+
+// MARK: - View Extensions
+
+extension AppViewModel {
+    var uniqueApps: [AppInfo] {
+        var seen = Set<String>()
+        var apps: [AppInfo] = []
+
+        for fileType in fileTypes {
+            if let handler = fileType.defaultHandler {
+                if !seen.contains(handler.bundleIdentifier) {
+                    seen.insert(handler.bundleIdentifier)
+                    apps.append(handler)
+                }
+            }
+        }
+
+        return apps.sorted { $0.name < $1.name }
+    }
+
+    func fileTypesCount(for bundleID: String) -> Int {
+        fileTypes.filter { $0.defaultHandler?.bundleIdentifier == bundleID }.count
+    }
+
+    func fileTypes(for category: FileCategory) -> [FileTypeAssociation] {
+        let exts = Set(category.extensions)
+        let filtered = fileTypes.filter { exts.contains($0.fileExtension) }
+
+        if searchText.isEmpty {
+            return filtered
+        }
+
+        let query = searchText.lowercased()
+        return filtered.filter {
+            $0.fileExtension.lowercased().contains(query) ||
+            $0.uti.lowercased().contains(query) ||
+            ($0.defaultHandler?.name.lowercased().contains(query) ?? false)
+        }
     }
 }

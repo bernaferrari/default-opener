@@ -8,25 +8,65 @@
 
 /* Begin PBXBuildFile section */
 		0000000000000001 /* OpenerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000001 /* OpenerApp.swift */; };
-		0000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000002 /* ContentView.swift */; };
 		0000000000000003 /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000003 /* AppViewModel.swift */; };
 		0000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1000000000000004 /* Assets.xcassets */; };
 		0000000000000005 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000006 /* Models.swift */; };
 		0000000000000006 /* BackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000007 /* BackupManager.swift */; };
 		B85811A32F0192F900E09B98 /* icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = B85811A22F0192F900E09B98 /* icon.icon */; };
+		C100000000000001 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000001 /* FlowLayout.swift */; };
+		C100000000000002 /* ExtensionBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000002 /* ExtensionBadge.swift */; };
+		C100000000000003 /* AppBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000003 /* AppBadge.swift */; };
+		C100000000000004 /* AppOptionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000004 /* AppOptionButton.swift */; };
+		C100000000000005 /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000005 /* ToastView.swift */; };
+		C100000000000006 /* UpdateBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000006 /* UpdateBanner.swift */; };
+		C100000000000007 /* NoSearchResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000007 /* NoSearchResultsView.swift */; };
+		C100000000000008 /* AppScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000008 /* AppScanner.swift */; };
+		C100000000000009 /* AppSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000009 /* AppSection.swift */; };
+		C10000000000000A /* AppRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000A /* AppRow.swift */; };
 		SPARKLE0000000001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = SPARKLE0000000002 /* Sparkle */; };
+		V100000000000001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V200000000000001 /* ContentView.swift */; };
+		V100000000000002 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V200000000000002 /* SidebarView.swift */; };
+		V100000000000003 /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V200000000000003 /* DetailView.swift */; };
+		V100000000000004 /* FileTypesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V200000000000004 /* FileTypesListView.swift */; };
+		V100000000000005 /* URLSchemesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V200000000000005 /* URLSchemesListView.swift */; };
+		V100000000000006 /* AppFileTypesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V200000000000006 /* AppFileTypesView.swift */; };
+		V100000000000007 /* BackupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V200000000000007 /* BackupsView.swift */; };
+		V100000000000008 /* AppPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = V200000000000008 /* AppPickerSheet.swift */; };
+		V100000000000009 /* URLSchemePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = V200000000000009 /* URLSchemePickerSheet.swift */; };
+		V10000000000000A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V20000000000000A /* SettingsView.swift */; };
+		V10000000000000B /* ExternalChangesAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = V20000000000000B /* ExternalChangesAlert.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1000000000000001 /* OpenerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenerApp.swift; sourceTree = "<group>"; };
-		1000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1000000000000003 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
 		1000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1000000000000005 /* DefaultOpener.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DefaultOpener.entitlements; sourceTree = "<group>"; };
 		1000000000000006 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		1000000000000007 /* BackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupManager.swift; sourceTree = "<group>"; };
-		2000000000000001 /* DefaultOpener.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DefaultOpener.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2000000000000001 /* DefaultOpener.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = DefaultOpener.app; path = "Default Opener.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B85811A22F0192F900E09B98 /* icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = icon.icon; sourceTree = "<group>"; };
+		C200000000000001 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
+		C200000000000002 /* ExtensionBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionBadge.swift; sourceTree = "<group>"; };
+		C200000000000003 /* AppBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBadge.swift; sourceTree = "<group>"; };
+		C200000000000004 /* AppOptionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppOptionButton.swift; sourceTree = "<group>"; };
+		C200000000000005 /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
+		C200000000000006 /* UpdateBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBanner.swift; sourceTree = "<group>"; };
+		C200000000000007 /* NoSearchResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoSearchResultsView.swift; sourceTree = "<group>"; };
+		C200000000000008 /* AppScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppScanner.swift; sourceTree = "<group>"; };
+		C200000000000009 /* AppSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSection.swift; sourceTree = "<group>"; };
+		C20000000000000A /* AppRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRow.swift; sourceTree = "<group>"; };
+		V200000000000001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		V200000000000002 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		V200000000000003 /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
+		V200000000000004 /* FileTypesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTypesListView.swift; sourceTree = "<group>"; };
+		V200000000000005 /* URLSchemesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemesListView.swift; sourceTree = "<group>"; };
+		V200000000000006 /* AppFileTypesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFileTypesView.swift; sourceTree = "<group>"; };
+		V200000000000007 /* BackupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupsView.swift; sourceTree = "<group>"; };
+		V200000000000008 /* AppPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPickerSheet.swift; sourceTree = "<group>"; };
+		V200000000000009 /* URLSchemePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemePickerSheet.swift; sourceTree = "<group>"; };
+		V20000000000000A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		V20000000000000B /* ExternalChangesAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalChangesAlert.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,10 +93,11 @@
 			isa = PBXGroup;
 			children = (
 				1000000000000001 /* OpenerApp.swift */,
-				1000000000000002 /* ContentView.swift */,
 				1000000000000003 /* AppViewModel.swift */,
 				1000000000000006 /* Models.swift */,
 				1000000000000007 /* BackupManager.swift */,
+				G000000000000001 /* Views */,
+				G000000000000002 /* Components */,
 				1000000000000004 /* Assets.xcassets */,
 				1000000000000005 /* DefaultOpener.entitlements */,
 				B85811A22F0192F900E09B98 /* icon.icon */,
@@ -70,6 +111,41 @@
 				2000000000000001 /* DefaultOpener.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		G000000000000001 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				V200000000000001 /* ContentView.swift */,
+				V200000000000002 /* SidebarView.swift */,
+				V200000000000003 /* DetailView.swift */,
+				V200000000000004 /* FileTypesListView.swift */,
+				V200000000000005 /* URLSchemesListView.swift */,
+				V200000000000006 /* AppFileTypesView.swift */,
+				V200000000000007 /* BackupsView.swift */,
+				V200000000000008 /* AppPickerSheet.swift */,
+				V200000000000009 /* URLSchemePickerSheet.swift */,
+				V20000000000000A /* SettingsView.swift */,
+				V20000000000000B /* ExternalChangesAlert.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		G000000000000002 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				C200000000000001 /* FlowLayout.swift */,
+				C200000000000002 /* ExtensionBadge.swift */,
+				C200000000000003 /* AppBadge.swift */,
+				C200000000000004 /* AppOptionButton.swift */,
+				C200000000000005 /* ToastView.swift */,
+				C200000000000006 /* UpdateBanner.swift */,
+				C200000000000007 /* NoSearchResultsView.swift */,
+				C200000000000008 /* AppScanner.swift */,
+				C200000000000009 /* AppSection.swift */,
+				C20000000000000A /* AppRow.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -149,10 +225,30 @@
 			buildActionMask = 2147483647;
 			files = (
 				0000000000000001 /* OpenerApp.swift in Sources */,
-				0000000000000002 /* ContentView.swift in Sources */,
 				0000000000000003 /* AppViewModel.swift in Sources */,
 				0000000000000005 /* Models.swift in Sources */,
 				0000000000000006 /* BackupManager.swift in Sources */,
+				V100000000000001 /* ContentView.swift in Sources */,
+				V100000000000002 /* SidebarView.swift in Sources */,
+				V100000000000003 /* DetailView.swift in Sources */,
+				V100000000000004 /* FileTypesListView.swift in Sources */,
+				V100000000000005 /* URLSchemesListView.swift in Sources */,
+				V100000000000006 /* AppFileTypesView.swift in Sources */,
+				V100000000000007 /* BackupsView.swift in Sources */,
+				V100000000000008 /* AppPickerSheet.swift in Sources */,
+				V100000000000009 /* URLSchemePickerSheet.swift in Sources */,
+				V10000000000000A /* SettingsView.swift in Sources */,
+				V10000000000000B /* ExternalChangesAlert.swift in Sources */,
+				C100000000000001 /* FlowLayout.swift in Sources */,
+				C100000000000002 /* ExtensionBadge.swift in Sources */,
+				C100000000000003 /* AppBadge.swift in Sources */,
+				C100000000000004 /* AppOptionButton.swift in Sources */,
+				C100000000000005 /* ToastView.swift in Sources */,
+				C100000000000006 /* UpdateBanner.swift in Sources */,
+				C100000000000007 /* NoSearchResultsView.swift in Sources */,
+				C100000000000008 /* AppScanner.swift in Sources */,
+				C100000000000009 /* AppSection.swift in Sources */,
+				C10000000000000A /* AppRow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -300,6 +396,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DefaultOpener/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Default Opener";
+				INFOPLIST_KEY_CFBundleName = "Default Opener";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -308,7 +405,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bernaferrari.defaultopener;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Default Opener";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 			};
@@ -333,6 +430,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DefaultOpener/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Default Opener";
+				INFOPLIST_KEY_CFBundleName = "Default Opener";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -341,7 +439,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bernaferrari.defaultopener;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Default Opener";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 			};
