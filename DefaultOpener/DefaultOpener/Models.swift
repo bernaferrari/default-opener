@@ -3,19 +3,16 @@ import AppKit
 
 // MARK: - App Info Model
 
-// NSImage isn't Sendable; AppInfo is consumed on the main thread.
-struct AppInfo: Identifiable, Hashable, @unchecked Sendable {
+struct AppInfo: Identifiable, Hashable, Sendable {
     var id: String { bundleIdentifier }
     let bundleIdentifier: String
     let name: String
     let path: String
-    let icon: NSImage?
 
     init(bundleIdentifier: String, name: String, path: String) {
         self.bundleIdentifier = bundleIdentifier
         self.name = name
         self.path = path
-        self.icon = NSWorkspace.shared.icon(forFile: path)
     }
 
     init?(url: URL) {
@@ -29,7 +26,11 @@ struct AppInfo: Identifiable, Hashable, @unchecked Sendable {
             ?? bundle.infoDictionary?["CFBundleDisplayName"] as? String
             ?? url.deletingPathExtension().lastPathComponent
         self.path = url.path
-        self.icon = NSWorkspace.shared.icon(forFile: url.path)
+    }
+
+    @MainActor
+    var icon: NSImage? {
+        NSWorkspace.shared.icon(forFile: path)
     }
 }
 
