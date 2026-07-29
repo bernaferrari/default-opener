@@ -2,6 +2,7 @@ import SwiftUI
 import Sparkle
 
 // This view model class publishes when new updates can be checked by the user
+@MainActor
 final class CheckForUpdatesViewModel: ObservableObject {
     @Published var canCheckForUpdates = false
 
@@ -192,4 +193,3 @@ struct AboutView: View {
         .background(.regularMaterial)
     }
 }
-
