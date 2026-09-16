@@ -62,12 +62,10 @@ struct AppFileTypesView: View {
                             fileType: fileType,
                             isExpanded: expandedItems.contains(fileType.id),
                             onToggleExpansion: {
-                                withAnimation(.snappy(duration: 0.25)) {
-                                    if expandedItems.contains(fileType.id) {
-                                        expandedItems.remove(fileType.id)
-                                    } else {
-                                        expandedItems.insert(fileType.id)
-                                    }
+                                if expandedItems.contains(fileType.id) {
+                                    expandedItems.remove(fileType.id)
+                                } else {
+                                    expandedItems.insert(fileType.id)
                                 }
                             }
                         )
@@ -95,5 +93,6 @@ struct AppFileTypesView: View {
 #Preview {
     AppFileTypesView(bundleID: "com.apple.TextEdit", selection: .constant(nil))
         .environmentObject(AppViewModel())
+        .environmentObject(SheetPresentationState())
         .frame(width: 600, height: 400)
 }

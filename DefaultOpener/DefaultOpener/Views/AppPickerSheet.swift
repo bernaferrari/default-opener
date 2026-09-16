@@ -9,10 +9,12 @@ struct AppPickerSheet: View {
 
     let mode: Mode
     @EnvironmentObject var viewModel: AppViewModel
+    @EnvironmentObject private var sheetPresentation: SheetPresentationState
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
     @State private var allApps: [AppInfo] = []
     @State private var isLoading = true
+    @State private var isApplying = false
     @State private var selectedApp: AppInfo?
     @FocusState private var isSearchFocused: Bool
 
@@ -142,9 +144,10 @@ struct AppPickerSheet: View {
 
                 Spacer()
 
-                Button("Cancel") {
+                Button("Cancel", role: .cancel) {
                     dismiss()
                 }
+                .keyboardShortcut(.cancelAction)
             }
             .padding()
 
@@ -208,6 +211,10 @@ struct AppPickerSheet: View {
                             }
                         }
 
+                        if filteredRegistered.isEmpty && filteredPopular.isEmpty && filteredApps(otherApps).isEmpty {
+                            ContentUnavailableView.search(text: searchText)
+                        }
+
                         // Other Apps Section
                         let filteredOther = filteredApps(otherApps)
                         if !filteredOther.isEmpty {
@@ -226,6 +233,16 @@ struct AppPickerSheet: View {
                         }
                     }
                 }
+            }
+
+            if let error = viewModel.operationError, isApplying {
+                ScrollView {
+                    Text(error.message)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                }
+                .frame(maxHeight: 120)
             }
 
             // Footer (only for bulk mode)
@@ -254,11 +271,16 @@ struct AppPickerSheet: View {
                         applyBulkChange()
                     }
                     .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
                     .disabled(selectedApp == nil)
                 }
                 .padding()
             }
         }
+        .disabled(viewModel.isMutating || viewModel.isLoading)
+        .interactiveDismissDisabled(viewModel.isMutating)
+        .onAppear { sheetPresentation.presentedCount += 1 }
+        .onDisappear { sheetPresentation.presentedCount = max(0, sheetPresentation.presentedCount - 1) }
         .frame(width: 500, height: isBulkMode ? 600 : 500)
         .task {
             allApps = await AppScanner.findAllApps()
@@ -269,23 +291,34 @@ struct AppPickerSheet: View {
     private func handleSelection(_ app: AppInfo) {
         switch mode {
         case .single(_, _, let onSelect):
+            isApplying = true
             onSelect(app.bundleIdentifier)
-            dismiss()
+            finishAfterOperation()
         case .bulk:
             selectedApp = app
         }
     }
 
     private func applyBulkChange() {
-        guard case .bulk(let exts, _, let onComplete) = mode,
+        guard case .bulk(let exts, _, _) = mode,
               let app = selectedApp else { return }
 
+        isApplying = true
         viewModel.bulkSetDefaultHandler(
             forExtensions: exts,
             bundleID: app.bundleIdentifier,
             appName: app.name
         )
-        onComplete()
-        dismiss()
+        finishAfterOperation()
     }
+
+    private func finishAfterOperation() {
+        Task {
+            await viewModel.waitForOperation()
+            guard viewModel.lastOperationSucceeded == true else { return }
+            if case .bulk(_, _, let onComplete) = mode { onComplete() }
+            dismiss()
+        }
+    }
+
 }

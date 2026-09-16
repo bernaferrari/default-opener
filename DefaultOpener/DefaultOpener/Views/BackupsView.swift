@@ -116,31 +116,14 @@ struct BackupsView: View {
         panel.message = "Select a Default Opener backup file to restore"
 
         if panel.runModal() == .OK, let url = panel.url {
-            do {
-                let fileManager = FileManager.default
-                let data = try Data(contentsOf: url)
-
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
-                let backup = try decoder.decode(AssociationsBackup.self, from: data)
-
-                let attributes = try fileManager.attributesOfItem(atPath: url.path)
-                let size = attributes[.size] as? Int ?? 0
-
-                let backupInfo = BackupInfo(
-                    url: url,
-                    createdAt: backup.createdAt,
-                    macOSVersion: backup.macOSVersion,
-                    fileTypesCount: backup.fileTypes.count,
-                    schemesCount: backup.urlSchemes.count,
-                    fileSize: size
-                )
-
-                backupToRestore = backupInfo
-                showingRestoreConfirm = true
-            } catch {
-                importError = "Failed to read backup: \(error.localizedDescription)"
-                showingImportError = true
+            Task {
+                do {
+                    backupToRestore = try await viewModel.inspectBackup(at: url)
+                    showingRestoreConfirm = true
+                } catch {
+                    importError = "Failed to read backup: \(error.localizedDescription)"
+                    showingImportError = true
+                }
             }
         }
     }
@@ -180,6 +163,7 @@ struct BackupRow: View {
                 Image(systemName: "folder")
             }
             .help("Reveal in Finder")
+            .accessibilityLabel("Reveal backup in Finder")
 
             Button("Restore") {
                 onRestore()
@@ -188,7 +172,8 @@ struct BackupRow: View {
             Button(role: .destructive) {
                 onDelete()
             } label: {
-                Image(systemName: "trash")
+                Label("Move Backup to Trash", systemImage: "trash")
+                    .labelStyle(.iconOnly)
             }
         }
         .padding(.vertical, 4)
@@ -198,5 +183,6 @@ struct BackupRow: View {
 #Preview("Empty State") {
     BackupsView()
         .environmentObject(AppViewModel())
+        .environmentObject(SheetPresentationState())
         .frame(width: 600, height: 400)
 }

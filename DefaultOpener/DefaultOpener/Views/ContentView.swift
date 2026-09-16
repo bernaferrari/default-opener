@@ -1,10 +1,16 @@
 import SwiftUI
 
+@MainActor
+final class SheetPresentationState: ObservableObject {
+    @Published var presentedCount = 0
+}
+
 struct ContentView: View {
     @EnvironmentObject var viewModel: AppViewModel
     @State private var selectedSidebarItem: SidebarItem? = .allFileTypes
-    @State private var refreshRotation: Double = 0
     @State private var showingExternalChanges = false
+    @State private var pendingExternalReview = false
+    @StateObject private var sheetPresentation = SheetPresentationState()
 
     enum SidebarItem: Hashable {
         case allFileTypes
@@ -27,41 +33,48 @@ struct ContentView: View {
                 viewModel.performUndo()
             }
         }
-        .overlay(alignment: .top) {
-            UpdateBanner(updateInfo: viewModel.updateInfo)
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+        .toolbar(id: "com.bernardoferrari.default-opener.main") {
+            ToolbarItem(id: "refresh", placement: .primaryAction) {
                 Button {
                     viewModel.refresh()
                 } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .rotationEffect(.degrees(refreshRotation))
+                    Label("Refresh", systemImage: "arrow.clockwise")
                 }
                 .help("Refresh")
-                .disabled(viewModel.isLoading)
+                .disabled(viewModel.isLoading || viewModel.isMutating)
             }
         }
-        .onChange(of: viewModel.isLoading) { _, isLoading in
-            if isLoading {
-                withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
-                    refreshRotation = 360
-                }
-            } else {
-                withAnimation(.default) {
-                    refreshRotation = 0
-                }
-            }
+        .onChange(of: viewModel.externalChanges.isEmpty, initial: true) { _, isEmpty in
+            pendingExternalReview = !isEmpty && !showingExternalChanges
+            presentPendingExternalReview()
         }
-        .onAppear {
-            if !viewModel.externalChanges.isEmpty {
-                showingExternalChanges = true
+        .onChange(of: sheetPresentation.presentedCount) { _, _ in presentPendingExternalReview() }
+        .onChange(of: viewModel.isMutating) { _, _ in presentPendingExternalReview() }
+        .onChange(of: viewModel.operationError?.id) { _, _ in presentPendingExternalReview() }
+        .alert(item: Binding(
+            get: { sheetPresentation.presentedCount == 0 && !showingExternalChanges ? viewModel.operationError : nil },
+            set: { value in
+                if sheetPresentation.presentedCount == 0 && !showingExternalChanges { viewModel.operationError = value }
             }
+        )) { error in
+            Alert(title: Text(error.title), message: Text(error.message), dismissButton: .default(Text("OK")))
         }
         .sheet(isPresented: $showingExternalChanges) {
             ExternalChangesAlert()
         }
+        .environmentObject(sheetPresentation)
+        .frame(minWidth: 820, minHeight: 640)
+
     }
+
+    private func presentPendingExternalReview() {
+        guard pendingExternalReview, !showingExternalChanges,
+              sheetPresentation.presentedCount == 0,
+              !viewModel.isMutating, viewModel.operationError == nil else { return }
+        pendingExternalReview = false
+        showingExternalChanges = true
+    }
+
 }
 
 #Preview {

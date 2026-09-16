@@ -16,11 +16,12 @@ struct FlowLayout: Layout {
     }
 
     private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
-        let maxWidth = proposal.width ?? .infinity
+        let maxWidth = proposal.width.flatMap { $0.isFinite ? $0 : nil } ?? .greatestFiniteMagnitude
         var positions: [CGPoint] = []
         var currentX: CGFloat = 0
         var currentY: CGFloat = 0
         var lineHeight: CGFloat = 0
+        var contentWidth: CGFloat = 0
 
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
@@ -34,8 +35,9 @@ struct FlowLayout: Layout {
             positions.append(CGPoint(x: currentX, y: currentY))
             lineHeight = max(lineHeight, size.height)
             currentX += size.width + spacing
+            contentWidth = max(contentWidth, currentX - spacing)
         }
 
-        return (CGSize(width: maxWidth, height: currentY + lineHeight), positions)
+        return (CGSize(width: min(maxWidth, contentWidth), height: currentY + lineHeight), positions)
     }
 }

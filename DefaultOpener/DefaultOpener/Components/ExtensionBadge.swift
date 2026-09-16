@@ -17,7 +17,7 @@ struct ExtensionBadge: View {
     var body: some View {
         Text(".\(ext)")
             .font(.system(.body, design: .monospaced, weight: .medium))
-            .foregroundStyle(color)
+            .foregroundStyle(.primary)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(color.opacity(0.1))

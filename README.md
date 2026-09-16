@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/platform-macOS%2014%2B-blue" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/platform-macOS%2027%2B-blue" alt="macOS 27+">
   <img src="https://img.shields.io/badge/Swift-6-orange" alt="Swift 6">
   <img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="Apache 2.0 License">
 </p>
@@ -41,7 +41,38 @@ xcodebuild -project DefaultOpener/DefaultOpener.xcodeproj -scheme DefaultOpener 
 
 ## Requirements
 
-- macOS 14.0+
+- macOS 27.0+
+- Xcode 27.0+
+
+## Development and verification
+
+Build with Xcode 27 on macOS 27:
+
+```sh
+xcodebuild -project DefaultOpener/DefaultOpener.xcodeproj -scheme DefaultOpener \
+  -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+```
+
+Run the regression suite:
+
+```sh
+xcodebuild -project DefaultOpener/DefaultOpener.xcodeproj -scheme DefaultOpener \
+  -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test
+```
+
+The tests run without an application host. They use an in-memory handler service,
+isolated preferences, and temporary backup directories; they never change your
+real file or URL defaults. Production handler changes use the asynchronous
+`NSWorkspace` APIs. Extensions sharing a content type are changed together.
+
+This macOS 27 version uses a new backup format with one handler per content type.
+Older extension-based backups are rejected explicitly because they can contain
+conflicting defaults for the same type. Existing backup files are left intact;
+create a new backup before making changes with this version.
+
+The CI workflow uses GitHub's `xcode-27` runner and builds the release configuration
+before running the regression suite. Distribution still requires signing and
+notarization; unsigned builds above are for local development.
 
 ## License
 

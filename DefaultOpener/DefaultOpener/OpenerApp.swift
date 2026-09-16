@@ -14,12 +14,12 @@ final class CheckForUpdatesViewModel: ObservableObject {
 
 // This is the view for the Check for Updates menu item
 struct CheckForUpdatesView: View {
-    @ObservedObject private var checkForUpdatesViewModel: CheckForUpdatesViewModel
+    @StateObject private var checkForUpdatesViewModel: CheckForUpdatesViewModel
     private let updater: SPUUpdater
 
     init(updater: SPUUpdater) {
         self.updater = updater
-        self.checkForUpdatesViewModel = CheckForUpdatesViewModel(updater: updater)
+        self._checkForUpdatesViewModel = StateObject(wrappedValue: CheckForUpdatesViewModel(updater: updater))
     }
 
     var body: some View {
@@ -68,6 +68,7 @@ struct DefaultOpenerApp: App {
                     viewModel.refresh()
                 }
                 .keyboardShortcut("r", modifiers: .command)
+                .disabled(viewModel.isLoading || viewModel.isMutating)
             }
         }
 
@@ -80,7 +81,7 @@ struct DefaultOpenerApp: App {
         .defaultPosition(.center)
 
         Settings {
-            SettingsView()
+            SettingsView(updater: updaterController.updater)
                 .environmentObject(viewModel)
         }
     }
@@ -90,11 +91,11 @@ struct DefaultOpenerApp: App {
 
 struct AboutView: View {
     let updater: SPUUpdater
-    @ObservedObject private var checkForUpdatesViewModel: CheckForUpdatesViewModel
+    @StateObject private var checkForUpdatesViewModel: CheckForUpdatesViewModel
 
     init(updater: SPUUpdater) {
         self.updater = updater
-        self.checkForUpdatesViewModel = CheckForUpdatesViewModel(updater: updater)
+        self._checkForUpdatesViewModel = StateObject(wrappedValue: CheckForUpdatesViewModel(updater: updater))
     }
 
     private var appVersion: String {

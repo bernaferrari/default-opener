@@ -7,6 +7,9 @@ struct URLSchemePickerSheet: View {
     let registeredHandlers: [AppInfo]
     let onSelect: (String) -> Void
 
+    @EnvironmentObject var viewModel: AppViewModel
+    @EnvironmentObject private var sheetPresentation: SheetPresentationState
+    @State private var isApplying = false
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
     @State private var allApps: [AppInfo] = []
@@ -45,9 +48,10 @@ struct URLSchemePickerSheet: View {
 
                 Spacer()
 
-                Button("Cancel") {
+                Button("Cancel", role: .cancel) {
                     dismiss()
                 }
+                .keyboardShortcut(.cancelAction)
             }
             .padding()
 
@@ -87,8 +91,12 @@ struct URLSchemePickerSheet: View {
                                         isSelected: false,
                                         showSelection: false
                                     ) {
+                                        isApplying = true
                                         onSelect(app.bundleIdentifier)
-                                        dismiss()
+                                        Task {
+                                            await viewModel.waitForOperation()
+                                            if viewModel.lastOperationSucceeded == true { dismiss() }
+                                        }
                                     }
                                 }
                             }
@@ -104,8 +112,12 @@ struct URLSchemePickerSheet: View {
                                         isSelected: false,
                                         showSelection: false
                                     ) {
+                                        isApplying = true
                                         onSelect(app.bundleIdentifier)
-                                        dismiss()
+                                        Task {
+                                            await viewModel.waitForOperation()
+                                            if viewModel.lastOperationSucceeded == true { dismiss() }
+                                        }
                                     }
                                 }
                             }
@@ -126,6 +138,21 @@ struct URLSchemePickerSheet: View {
                 }
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            if let error = viewModel.operationError, isApplying {
+                ScrollView {
+                    Text(error.message)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                }
+                .frame(maxHeight: 120)
+            }
+        }
+        .disabled(viewModel.isLoading || viewModel.isMutating)
+        .interactiveDismissDisabled(viewModel.isMutating)
+        .onAppear { sheetPresentation.presentedCount += 1 }
+        .onDisappear { sheetPresentation.presentedCount = max(0, sheetPresentation.presentedCount - 1) }
         .frame(width: 500, height: 550)
         .task {
             allApps = await AppScanner.findAllApps()

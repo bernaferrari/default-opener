@@ -26,7 +26,7 @@ struct FileTypesListView: View {
             if isSelectionMode {
                 HStack {
                     if selectedTypes.isEmpty {
-                        Text("Tap to select file types")
+                        Text("Select file types")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     } else {
@@ -97,6 +97,7 @@ struct FileTypesListView: View {
                     Image(systemName: isSelectionMode ? "checkmark.circle.fill" : "checkmark.circle")
                 }
                 .help(isSelectionMode ? "Exit selection mode" : "Select multiple")
+                .accessibilityLabel(isSelectionMode ? "Exit selection mode" : "Select multiple file types")
             }
         }
         .sheet(isPresented: $showingBulkChange) {
@@ -135,12 +136,10 @@ struct FileTypesListView: View {
                 isSelected: selectedTypes.contains(fileType.id),
                 isSelectionMode: isSelectionMode,
                 onToggleExpansion: {
-                    withAnimation(.snappy(duration: 0.25)) {
-                        if expandedItems.contains(fileType.id) {
-                            expandedItems.remove(fileType.id)
-                        } else {
-                            expandedItems.insert(fileType.id)
-                        }
+                    if expandedItems.contains(fileType.id) {
+                        expandedItems.remove(fileType.id)
+                    } else {
+                        expandedItems.insert(fileType.id)
                     }
                 },
                 onToggleSelection: {
@@ -168,26 +167,23 @@ struct FileTypeRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
-                ZStack {
+                Button {
                     if isSelectionMode {
-                        Button {
-                            onToggleSelection?()
-                        } label: {
-                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                                .font(.system(size: 18))
-                                .foregroundStyle(isSelected ? Color.accentColor : .secondary)
-                        }
-                        .buttonStyle(.plain)
+                        onToggleSelection?()
                     } else {
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.tertiary)
-                            .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                        onToggleExpansion?()
                     }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: isSelectionMode ? (isSelected ? "checkmark.circle.fill" : "circle") : (isExpanded ? "chevron.down" : "chevron.right"))
+                            .frame(width: 20)
+                        ExtensionBadge(ext: fileType.fileExtension)
+                    }
+                    .contentShape(Rectangle())
                 }
-                .frame(width: 20)
-
-                ExtensionBadge(ext: fileType.fileExtension)
+                .buttonStyle(.plain)
+                .accessibilityLabel(isSelectionMode ? "Select .\(fileType.fileExtension)" : "Default apps for .\(fileType.fileExtension)")
+                .accessibilityValue(isSelectionMode ? (isSelected ? "Selected" : "Not selected") : (isExpanded ? "Expanded" : "Collapsed"))
 
                 Image(systemName: "arrow.right")
                     .font(.system(size: 10, weight: .medium))
@@ -243,14 +239,7 @@ struct FileTypeRow: View {
                 Spacer()
             }
             .padding(.vertical, 8)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                if isSelectionMode {
-                    onToggleSelection?()
-                } else {
-                    onToggleExpansion?()
-                }
-            }
+
 
             if isExpanded && !isSelectionMode {
                 VStack(alignment: .leading, spacing: 12) {
@@ -296,8 +285,6 @@ struct FileTypeRow: View {
                 .padding(.leading, 44)
             }
         }
-        .animation(.snappy(duration: 0.25), value: isExpanded)
-        .animation(.snappy(duration: 0.2), value: isSelectionMode)
         .contextMenu {
             Button {
                 NSPasteboard.general.clearContents()
@@ -363,5 +350,6 @@ struct FileTypeRow: View {
 #Preview {
     FileTypesListView(fileTypes: [], title: "All File Types")
         .environmentObject(AppViewModel())
+        .environmentObject(SheetPresentationState())
         .frame(width: 600, height: 400)
 }

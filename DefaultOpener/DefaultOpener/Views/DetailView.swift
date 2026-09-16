@@ -25,18 +25,18 @@ struct DetailView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .disabled(viewModel.isLoading || viewModel.isMutating)
         .overlay {
-            if viewModel.isLoading {
+            if viewModel.isLoading || viewModel.isMutating {
                 VStack(spacing: 12) {
                     ProgressView()
                         .scaleEffect(1.5)
-                    Text("Loading...")
+                    Text(viewModel.isMutating ? "Applying changes…" : "Loading…")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.ultraThinMaterial)
-                .allowsHitTesting(false)
             }
         }
     }
@@ -45,5 +45,6 @@ struct DetailView: View {
 #Preview {
     DetailView(selection: .constant(.allFileTypes))
         .environmentObject(AppViewModel())
+        .environmentObject(SheetPresentationState())
         .frame(width: 600, height: 400)
 }

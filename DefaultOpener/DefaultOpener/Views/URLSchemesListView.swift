@@ -42,21 +42,23 @@ struct URLSchemeRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
-                ZStack {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.tertiary)
-                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                Button {
+                    isExpanded.toggle()
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                            .frame(width: 20)
+                        Text("\(scheme.scheme)://")
+                            .font(.system(.body, design: .monospaced))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.secondary.opacity(0.1), in: RoundedRectangle(cornerRadius: 6))
+                    }
+                    .contentShape(Rectangle())
                 }
-                .frame(width: 20)
-
-                Text("\(scheme.scheme)://")
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundStyle(.blue)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                .buttonStyle(.plain)
+                .accessibilityLabel("Default apps for \(scheme.scheme)")
+                .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
 
                 Image(systemName: "arrow.right")
                     .font(.system(size: 10, weight: .medium))
@@ -106,12 +108,7 @@ struct URLSchemeRow: View {
                 Spacer()
             }
             .padding(.vertical, 8)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                withAnimation(.snappy(duration: 0.25)) {
-                    isExpanded.toggle()
-                }
-            }
+
 
             if isExpanded {
                 VStack(alignment: .leading, spacing: 12) {
@@ -151,7 +148,6 @@ struct URLSchemeRow: View {
                 .padding(.leading, 44)
             }
         }
-        .animation(.snappy(duration: 0.25), value: isExpanded)
         .contextMenu {
             Button {
                 NSPasteboard.general.clearContents()
@@ -208,5 +204,6 @@ struct URLSchemeRow: View {
 #Preview {
     URLSchemesListView(schemes: [], title: "URL Schemes")
         .environmentObject(AppViewModel())
+        .environmentObject(SheetPresentationState())
         .frame(width: 600, height: 400)
 }

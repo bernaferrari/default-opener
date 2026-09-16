@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: xcode-27
 
     steps:
     - uses: actions/checkout@v4
@@ -21,3 +21,6 @@ jobs:
 
     - name: Build
       run: xcodebuild -scheme DefaultOpener -project DefaultOpener/DefaultOpener.xcodeproj -configuration Release build CODE_SIGNING_ALLOWED=NO CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION=YES
+
+    - name: Test handler and backup regressions
+      run: xcodebuild -scheme DefaultOpener -project DefaultOpener/DefaultOpener.xcodeproj -configuration Debug -destination 'platform=macOS' test CODE_SIGNING_ALLOWED=NO

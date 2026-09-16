@@ -49,5 +49,6 @@ struct AppRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityValue(isSelected && showSelection ? "Selected" : (isCurrentHandler ? "Current default" : ""))
     }
 }

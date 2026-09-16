@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ToastView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let message: String?
     let undoAction: (() -> Void)?
     let onUndo: () -> Void
@@ -17,26 +18,26 @@ struct ToastView: View {
                 HStack(spacing: 12) {
                     Text(message)
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
 
                     if undoAction != nil {
                         Button("Undo") {
                             onUndo()
                         }
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                     }
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background(Color.accentColor)
+                .background(Color(nsColor: .windowBackgroundColor))
                 .clipShape(Capsule())
                 .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(reduceMotion ? .identity : .opacity)
             }
         }
         .padding(.bottom, 20)
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: message)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: message)
     }
 }
 

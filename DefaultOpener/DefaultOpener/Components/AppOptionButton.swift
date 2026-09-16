@@ -22,18 +22,19 @@ struct AppOptionButton: View {
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.caption.bold())
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.primary)
                 }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(isSelected ? Color.blue.opacity(0.1) : Color(nsColor: .controlBackgroundColor))
+            .background(isSelected ? Color.accentColor.opacity(0.1) : Color(nsColor: .controlBackgroundColor))
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 1.5)
+                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 1.5)
             )
         }
         .buttonStyle(.plain)
+        .accessibilityValue(isSelected ? "Current default" : "")
     }
 }

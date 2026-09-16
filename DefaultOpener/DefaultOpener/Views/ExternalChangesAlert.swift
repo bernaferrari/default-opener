@@ -3,6 +3,7 @@ import AppKit
 
 struct ExternalChangesAlert: View {
     @EnvironmentObject var viewModel: AppViewModel
+    @EnvironmentObject private var sheetPresentation: SheetPresentationState
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -14,9 +15,9 @@ struct ExternalChangesAlert: View {
                     .foregroundStyle(.orange)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Your Defaults Were Changed")
+                    Text("Defaults Changed Outside This App")
                         .font(.title2.bold())
-                    Text("Another app modified \(viewModel.externalChanges.count) of your default \(viewModel.externalChanges.count == 1 ? "handler" : "handlers")")
+                    Text("\(viewModel.externalChanges.count) default \(viewModel.externalChanges.count == 1 ? "handler has" : "handlers have") changed since the last check.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -42,6 +43,16 @@ struct ExternalChangesAlert: View {
 
             Divider()
 
+            if let error = viewModel.operationError {
+                ScrollView {
+                    Text(error.message)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                }
+                .frame(maxHeight: 120)
+            }
+
             // Footer buttons
             HStack {
                 Button("Keep All Changes") {
@@ -53,11 +64,17 @@ struct ExternalChangesAlert: View {
 
                 Button("Revert All") {
                     viewModel.revertAllExternalChanges()
-                    dismiss()
                 }
                 .buttonStyle(.borderedProminent)
             }
             .padding()
+        }
+        .disabled(viewModel.isLoading || viewModel.isMutating)
+        .interactiveDismissDisabled(viewModel.isMutating)
+        .onAppear { sheetPresentation.presentedCount += 1 }
+        .onDisappear { sheetPresentation.presentedCount = max(0, sheetPresentation.presentedCount - 1) }
+        .onChange(of: viewModel.externalChanges.isEmpty) { _, isEmpty in
+            if isEmpty { dismiss() }
         }
         .frame(width: 480, height: 400)
     }

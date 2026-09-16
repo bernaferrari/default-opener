@@ -3,7 +3,7 @@ import AppKit
 
 // MARK: - App Info Model
 
-struct AppInfo: Identifiable, Hashable, Sendable {
+struct AppInfo: Identifiable, Hashable, Codable, Sendable {
     var id: String { bundleIdentifier }
     let bundleIdentifier: String
     let name: String
@@ -36,7 +36,7 @@ struct AppInfo: Identifiable, Hashable, Sendable {
 
 // MARK: - File Type Association
 
-struct FileTypeAssociation: Identifiable, Hashable {
+struct FileTypeAssociation: Identifiable, Hashable, Sendable {
     var id: String { fileExtension }
     let fileExtension: String
     let uti: String
@@ -47,7 +47,7 @@ struct FileTypeAssociation: Identifiable, Hashable {
 
 // MARK: - URL Scheme Association
 
-struct URLSchemeAssociation: Identifiable, Hashable {
+struct URLSchemeAssociation: Identifiable, Hashable, Sendable {
     var id: String { scheme }
     let scheme: String
     let description: String?
@@ -55,26 +55,28 @@ struct URLSchemeAssociation: Identifiable, Hashable {
     var availableHandlers: [AppInfo]
 }
 
-// MARK: - Activity Log Entry
+// MARK: - Recorded Operations
 
-struct ActivityLogEntry: Identifiable, Codable {
-    let id: UUID
-    let timestamp: Date
+struct HandlerChangeRecord: Codable, Sendable {
+    let target: HandlerTarget
+    let oldHandler: AppInfo?
+    let newHandler: AppInfo?
+
+    var undoRequest: HandlerMutationRequest? {
+        guard let old = oldHandler else { return nil }
+        return HandlerMutationRequest(target: target, bundleID: old.bundleIdentifier,
+            expectation: .matches(newHandler?.bundleIdentifier))
+    }
+}
+
+struct ActivityLogEntry: Identifiable, Codable, Sendable {
+    var id = UUID()
+    var timestamp = Date()
     let action: ActionType
     let target: String
-    let oldValue: String?
-    let newValue: String?
-    let oldBundleID: String?
-    let newBundleID: String?
-    let bulkDetails: [BulkChangeDetail]?
+    let changes: [HandlerChangeRecord]
 
-    struct BulkChangeDetail: Codable {
-        let fileExtension: String
-        let oldBundleID: String?
-        let oldAppName: String?
-    }
-
-    enum ActionType: String, Codable {
+    enum ActionType: String, Codable, Sendable {
         case setFileTypeHandler = "Changed file handler"
         case setSchemeHandler = "Changed URL handler"
         case bulkChange = "Bulk change"
@@ -82,67 +84,30 @@ struct ActivityLogEntry: Identifiable, Codable {
         case createBackup = "Created backup"
     }
 
-    init(timestamp: Date, action: ActionType, target: String, oldValue: String?, newValue: String?, oldBundleID: String? = nil, newBundleID: String? = nil, bulkDetails: [BulkChangeDetail]? = nil) {
-        self.id = UUID()
-        self.timestamp = timestamp
-        self.action = action
-        self.target = target
-        self.oldValue = oldValue
-        self.newValue = newValue
-        self.oldBundleID = oldBundleID
-        self.newBundleID = newBundleID
-        self.bulkDetails = bulkDetails
-    }
-
     var description: String {
+        if changes.count == 1, let change = changes.first {
+            return "\(change.target.displayName): \(change.oldHandler?.name ?? "None") → \(change.newHandler?.name ?? "None")"
+        }
         switch action {
-        case .setFileTypeHandler:
-            let from = oldValue ?? "none"
-            let to = newValue ?? "none"
-            return ".\(target): \(from) → \(to)"
-        case .setSchemeHandler:
-            let from = oldValue ?? "none"
-            let to = newValue ?? "none"
-            return "\(target)://: \(from) → \(to)"
-        case .bulkChange:
-            return "\(target) file types → \(newValue ?? "unknown")"
-        case .restore:
-            return "Restored from \(target)"
-        case .createBackup:
-            return "Created backup"
+        case .createBackup: return "Created backup"
+        case .restore: return "Restored \(changes.count) defaults from \(target)"
+        default: return "Changed \(changes.count) defaults: \(target)"
         }
     }
-
-    var canUndo: Bool {
-        switch action {
-        case .setFileTypeHandler, .setSchemeHandler:
-            return oldValue != nil
-        case .bulkChange:
-            guard let details = bulkDetails else { return false }
-            return !details.isEmpty
-        default:
-            return false
-        }
-    }
+    var canUndo: Bool { changes.contains { $0.undoRequest != nil } }
 }
 
-// MARK: - Update Info
-
-struct UpdateInfo {
-    let currentVersion: String
-    let latestVersion: String
-    let releaseURL: URL
-    let releaseNotes: String?
-
-    var isUpdateAvailable: Bool {
-        latestVersion.compare(currentVersion, options: .numeric) == .orderedDescending
-    }
+struct OperationError: Identifiable {
+    let id = UUID()
+    let title: String
+    let message: String
 }
 
 // MARK: - External Change Detection
 
-struct ExternalChange: Identifiable {
-    let id = UUID()
+struct ExternalChange: Identifiable, Sendable {
+    var id: HandlerTarget { handlerTarget }
+    let handlerTarget: HandlerTarget
     let type: ChangeType
     let target: String
     let oldBundleID: String?
@@ -150,28 +115,34 @@ struct ExternalChange: Identifiable {
     let newBundleID: String?
     let newAppName: String?
 
-    enum ChangeType {
-        case fileType
-        case urlScheme
-    }
+    enum ChangeType: Sendable { case fileType, urlScheme }
+    var displayTarget: String { handlerTarget.displayName }
+}
 
-    var displayTarget: String {
-        switch type {
-        case .fileType: return ".\(target)"
-        case .urlScheme: return "\(target)://"
+struct HandlerSnapshot: Codable, Sendable {
+    var timestamp: Date
+    var fileTypes: [String: String]
+    var urlSchemes: [String: String]
+
+    subscript(target: HandlerTarget) -> String? {
+        get {
+            switch target {
+            case .contentType(let value): return fileTypes[value]
+            case .urlScheme(let value): return urlSchemes[value]
+            }
+        }
+        set {
+            switch target {
+            case .contentType(let value): fileTypes[value] = newValue
+            case .urlScheme(let value): urlSchemes[value] = newValue
+            }
         }
     }
 }
 
-struct HandlerSnapshot: Codable {
-    let timestamp: Date
-    let fileTypes: [String: String]
-    let urlSchemes: [String: String]
-}
+// MARK: - Backup Data
 
-// MARK: - Backup Info
-
-struct BackupInfo: Identifiable {
+struct BackupInfo: Identifiable, Sendable {
     var id: String { url.path }
     let url: URL
     let createdAt: Date
@@ -181,38 +152,30 @@ struct BackupInfo: Identifiable {
     let fileSize: Int
 
     var filename: String { url.lastPathComponent }
-
-    var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: createdAt)
-    }
-
-    var formattedSize: String {
-        ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)
-    }
+    var formattedDate: String { createdAt.formatted(date: .abbreviated, time: .shortened) }
+    var formattedSize: String { ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file) }
 }
 
-struct AssociationsBackup: Codable {
+/// Version 2 uses canonical UTI identifiers as fileTypes keys.
+struct AssociationsBackup: Codable, Sendable {
     let version: Int
     let createdAt: Date
     let macOSVersion: String
     let fileTypes: [String: String]
     let urlSchemes: [String: String]
 
-    init(fileTypes: [String: String], urlSchemes: [String: String]) {
-        self.version = 1
-        self.createdAt = Date()
-        self.macOSVersion = ProcessInfo.processInfo.operatingSystemVersionString
+    init(fileTypes: [String: String], urlSchemes: [String: String], createdAt: Date = Date()) {
+        version = 2
+        self.createdAt = createdAt
+        macOSVersion = ProcessInfo.processInfo.operatingSystemVersionString
         self.fileTypes = fileTypes
         self.urlSchemes = urlSchemes
     }
-}
 
-struct RestoreResult {
-    var restoredFileTypes: [String] = []
-    var restoredSchemes: [String] = []
+    var mutationRequests: [HandlerMutationRequest] {
+        fileTypes.map { HandlerMutationRequest(target: .contentType($0.key), bundleID: $0.value) }
+        + urlSchemes.map { HandlerMutationRequest(target: .urlScheme($0.key), bundleID: $0.value) }
+    }
 }
 
 // MARK: - Common Extensions

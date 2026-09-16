@@ -1,9 +1,9 @@
 import SwiftUI
 import AppKit
+import Sparkle
 
 struct SettingsView: View {
-    @EnvironmentObject var viewModel: AppViewModel
-    @State private var isCheckingUpdate = false
+    let updater: SPUUpdater
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
@@ -25,45 +25,12 @@ struct SettingsView: View {
             }
 
             Section("Updates") {
-                if let update = viewModel.updateInfo, update.isUpdateAvailable {
-                    HStack {
-                        Label("Version \(update.latestVersion) available", systemImage: "arrow.down.circle.fill")
-                            .foregroundStyle(.blue)
-                        Spacer()
-                        Button("Download") {
-                            NSWorkspace.shared.open(update.releaseURL)
-                        }
-                    }
-                } else {
-                    HStack {
-                        Text("You're up to date")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Button {
-                            isCheckingUpdate = true
-                            viewModel.checkForUpdates()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                isCheckingUpdate = false
-                            }
-                        } label: {
-                            if isCheckingUpdate {
-                                ProgressView()
-                                    .scaleEffect(0.7)
-                            } else {
-                                Text("Check for Updates")
-                            }
-                        }
-                        .disabled(isCheckingUpdate)
-                    }
-                }
+                CheckForUpdatesView(updater: updater)
+                Text("Check for updates securely with the built-in updater.")
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
         .frame(width: 450, height: 280)
     }
-}
-
-#Preview {
-    SettingsView()
-        .environmentObject(AppViewModel())
 }

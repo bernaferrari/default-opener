@@ -15,6 +15,7 @@ xcuserdata/
 .swiftpm/
 Packages/
 Package.resolved
+!DefaultOpener/DefaultOpener.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
 # Compiled app
 *.app
